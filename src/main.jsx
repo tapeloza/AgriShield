@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LanguageProvider, LanguageSelect, useLanguage } from './Language.jsx';
 import { createRoot } from 'react-dom/client';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -10,7 +10,7 @@ import FarmProfile from './FarmProfile.jsx';
 import ProfileMenu from './ProfileMenu.jsx';
 import Team from './Team.jsx';
 import Publications from './Publications.jsx';
-import { saveCloudReading, saveSpecialistRole, watchReadings, watchRole } from './cloud.js';
+import { saveCloudReading, saveCloudSensor, saveSpecialistRole, watchReadings, watchRole, watchSensors } from './cloud.js';
 import QuickTools from './QuickTools.jsx';
 import Support from './Support.jsx';
 import FarmOnboarding from './FarmOnboarding.jsx';
@@ -102,6 +102,8 @@ function App({ user, ready }) {
   const workspace = !authPage && !supportPage && (Boolean(user) || demo);
   const [cloudReadings, setCloudReadings] = useState([]);
   const [cloudStatus, setCloudStatus] = useState('');
+  const [sensorSync, setSensorSync] = useState('');
+  const syncAttempts = useRef(new Set());
   const [state, setState] = useState(demo ? initial : newFarm);
   const [loaded, setLoaded] = useState(false);
   const [storage, setStorage] = useState('');
@@ -186,6 +188,58 @@ function App({ user, ready }) {
     });
   }, [user, workspace, role]);
 
+  useEffect(() => {
+    if (!loaded || !user || demo || !workspace || role !== 'grower') return;
+    const local = state.sensors;
+    let migrated = false;
+    return watchSensors(auth, user.uid, snapshot => {
+      const remote = snapshot.docs.map(entry => ({ ...entry.data(), id: entry.id }));
+      const byId = new Map(remote.map(item => [item.id, item]));
+
+      setState(old => {
+        const known = new Set(old.sensors.map(item => item.id));
+        const sensors = old.sensors.map(item => item.syncToken || !byId.has(item.id) ? item
+          : { ...item, ...byId.get(item.id) });
+        for (const item of remote) {
+          if (!known.has(item.id)) sensors.push({ ...item, scenario: 'steady' });
+        }
+        const requested = sensors.find(item => item.id === requestedSensor);
+        const selected = requested && !old.sensors.some(item => item.id === requested.id)
+          ? requested : sensors.find(item => item.id === old.sensorId) ?? sensors[0];
+        return { ...old, sensors, sensorId: selected?.id ?? '',
+          scenario: selected && selected.id !== old.sensorId ? selected.scenario : old.scenario };
+      });
+
+      if (migrated || snapshot.metadata.fromCache) return;
+      migrated = true;
+      const missing = local.filter(item => !item.syncToken && !byId.has(item.id));
+      if (!missing.length) {
+        setSensorSync('Sensor register connected to Firebase.');
+        return;
+      }
+      setSensorSync('Syncing sensors saved on this device…');
+      Promise.all(missing.map(item => saveCloudSensor(auth, user.uid, item, true)))
+        .then(() => setSensorSync('Sensor register synced to Firebase.'))
+        .catch(() => setSensorSync('Could not upload existing sensors. Your local register is still available.'));
+    }, () => setSensorSync('Cloud sensor sync unavailable. Check the Firestore sensor rules.'));
+  // Migrate the local list once when the workspace opens. Later edits are synced separately.
+  }, [loaded, user, workspace, role]);
+
+  useEffect(() => {
+    if (!loaded || !user || demo || !workspace || role !== 'grower') return;
+    for (const item of state.sensors) {
+      const token = item.syncToken;
+      if (!token || syncAttempts.current.has(token)) continue;
+      syncAttempts.current.add(token);
+      setSensorSync('Sensor saved on this device. Cloud sync pending.');
+      saveCloudSensor(auth, user.uid, item).then(() => {
+        setState(old => ({ ...old, sensors: old.sensors.map(sensor =>
+          sensor.syncToken === token ? { ...sensor, syncToken: null } : sensor) }));
+        setSensorSync('Sensor register synced to Firebase.');
+      }).catch(() => setSensorSync('Cloud sensor sync unavailable. The sensor is saved on this device.'));
+    }
+  }, [loaded, user, workspace, role, state.sensors]);
+
   const cloudIds = new Set(cloudReadings.map(item => item.id));
   const history = [...cloudReadings, ...state.history.filter(item => !item.id || !cloudIds.has(item.id))]
     .sort((first, second) => second.time - first.time);
@@ -220,11 +274,12 @@ function App({ user, ready }) {
   }
 
   function saveSensor(item) {
+    const syncToken = demo ? null : crypto.randomUUID();
     setReading(null);
     setSensor('');
     setState(old => {
       const existing = old.sensors.find(candidate => candidate.id === item.id);
-      const saved = { scenario: 'steady', ...existing, ...item };
+      const saved = { scenario: 'steady', ...existing, ...item, syncToken };
       const sensors = existing ? old.sensors.map(candidate => candidate.id === saved.id ? saved : candidate)
         : [...old.sensors, saved];
       return { ...old, sensors, sensorId: saved.id, scenario: saved.scenario,
@@ -337,6 +392,7 @@ function App({ user, ready }) {
         </> : view === 'sensors' ? <>
           <h1>{t("Sensors")}</h1>
           <p className="intro">Register devices, update field locations and print QR labels.</p>
+          {!demo && sensorSync && <p className="monitor-note" role="status">{sensorSync}</p>}
           {!loaded ? <p role="status">Loading sensors…</p> :
             <SensorRegister key={sensorLocation?.id ?? 'empty'} sensors={state.sensors} sensor={sensorLocation}
               missing={missingSensor} disabled={busy} lastSeen={sensorHistory[0] ? formatTime(sensorHistory[0].time) : ''}
@@ -356,6 +412,7 @@ function App({ user, ready }) {
         {!loaded ? <p role="status">Loading your dashboard…</p> : !sensorLocation ? <section className="card">
           <h2>{t("No field sensors yet")}</h2>
           <p className="monitor-note">Register a sensor to start collecting readings for your farm.</p>
+          {!demo && sensorSync && <p className="monitor-note" role="status">{sensorSync}</p>}
           <button className="primary" onClick={() => setView('sensors')}>{t("Go to Sensors")}</button>
         </section> : <>
         <div className="card sensor-register">

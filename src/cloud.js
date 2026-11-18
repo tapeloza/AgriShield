@@ -1,6 +1,6 @@
 import {
   collection, connectFirestoreEmulator, doc, initializeFirestore, limit, onSnapshot,
-  orderBy, persistentLocalCache, persistentMultipleTabManager, query, setDoc,
+  orderBy, persistentLocalCache, persistentMultipleTabManager, query, runTransaction, setDoc,
 } from 'firebase/firestore';
 
 let database;
@@ -33,4 +33,20 @@ export function watchReadings(auth, uid, next, failed) {
 export function saveCloudReading(auth, uid, reading) {
   const { id, sensorId, crop, time, source, moisture } = reading;
   return setDoc(doc(store(auth), 'accounts', uid, 'readings', id), { sensorId, crop, time, source, moisture });
+}
+
+export function watchSensors(auth, uid, next, failed) {
+  return onSnapshot(collection(store(auth), 'accounts', uid, 'sensors'), { includeMetadataChanges: true }, next, failed);
+}
+
+export function saveCloudSensor(auth, uid, sensor, createIfMissing = false) {
+  const { id, plot, bed, landmark } = sensor;
+  const db = store(auth);
+  const ref = doc(db, 'accounts', uid, 'sensors', id);
+  const fields = { plot, bed, landmark: landmark || '' };
+  if (!createIfMissing) return setDoc(ref, fields);
+  return runTransaction(db, async transaction => {
+    const existing = await transaction.get(ref);
+    if (!existing.exists()) transaction.set(ref, fields);
+  });
 }

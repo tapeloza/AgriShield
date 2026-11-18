@@ -11,6 +11,19 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['role'])
         && request.resource.data.role == 'specialist';
 
+      match /sensors/{sensorId} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid)
+          && sensorId.matches('^[A-Z0-9][A-Z0-9-]{1,31}$')
+          && request.resource.data.keys().hasOnly(['plot', 'bed', 'landmark'])
+          && request.resource.data.plot is string
+          && request.resource.data.plot.size() >= 1 && request.resource.data.plot.size() <= 80
+          && request.resource.data.bed is string
+          && request.resource.data.bed.size() >= 1 && request.resource.data.bed.size() <= 80
+          && request.resource.data.landmark is string
+          && request.resource.data.landmark.size() <= 120;
+      }
+
       match /readings/{readingId} {
         allow read: if owns(uid);
         allow create, update: if owns(uid)
