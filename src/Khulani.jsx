@@ -16,7 +16,6 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
   const storageKey = 'agrishield.khulani:' + workspaceKey;
   const [history, setHistory] = useState(() => readHistory(storageKey));
   const [question, setQuestion] = useState('');
-  const [mode, setMode] = useState('farm');
   const [listening, setListening] = useState(false);
   const [message, setMessage] = useState('');
   const recognition = useRef(null);
@@ -57,6 +56,7 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
 
   async function ask(value) {
     const text = value.trim();
+    const mode = /\bsample (?:farm|sensors?|beds?|data|forecast|demo)\b/i.test(text) ? 'gemini' : 'farm';
     if (!text || !ready || pending.current) return;
     stopListening();
     window.speechSynthesis?.cancel();
@@ -75,9 +75,9 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
           body: JSON.stringify({ question: text, turns }), signal: AbortSignal.timeout(24000),
         });
         if (!response.ok) {
-          if (response.status === 429) throw new Error('Gemini’s free quota is busy. Try again later or use My farm.');
+          if (response.status === 429) throw new Error('Gemini’s free quota is busy. Try again later or ask about your own farm.');
           if (response.status === 401) throw new Error('Sign in again to use Gemini sample chat.');
-          throw new Error('Gemini sample chat is unavailable. Try again or use My farm.');
+          throw new Error('Gemini sample chat is unavailable. Try again or ask about your own farm.');
         }
         answer = await response.json();
         if (typeof answer.text !== 'string' || !Array.isArray(answer.sources)) throw new Error('Gemini returned an unexpected reply.');
@@ -88,7 +88,7 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
         setWorking(false);
         setQuestion(text);
         setMessage(error instanceof TypeError || error.name === 'TimeoutError'
-          ? 'Gemini needs an internet connection. Try again or use My farm.'
+          ? 'Gemini needs an internet connection. Try again or ask about your own farm.'
           : error.message);
       }
       return;
@@ -196,11 +196,6 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
       <header className="khulani-header">
         <h1 id="khulani-title" ref={heading} tabIndex={-1}>Khulani AI</h1>
         <p>Chat history stays on this device.</p>
-        <div className="khulani-modes" role="group" aria-label="Chat mode">
-          <button type="button" disabled={working} aria-pressed={mode === 'farm'} onClick={() => { setMode('farm'); setQuestion(''); setMessage(''); }}>My farm</button>
-          <button type="button" disabled={working} aria-pressed={mode === 'gemini'} onClick={() => { setMode('gemini'); setQuestion(''); setMessage(''); }}>Gemini sample</button>
-        </div>
-        {mode === 'gemini' && <p>Google processes prompts in this mode. Use sample questions without personal or farm-identifying details.</p>}
         {history.length > 0 && <button type="button" className="khulani-clear" disabled={working} onClick={clearChat}>Clear chat</button>}
       </header>
       <section hidden={history.length === 0} className="khulani-transcript" ref={transcript} role="log" aria-label="Chat history" tabIndex={0}>
@@ -221,10 +216,10 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
         <div className="khulani-welcome">
           <span className="khulani-orb" aria-hidden="true" />
           <h3>Ask Khulani about your field</h3>
-          <p>{mode === "gemini" ? "Ask about sample sensors AS-001, AS-002 or AS-003." : "Ask by sensor ID or bed name, or ask about all your sensors."}</p>
+          <p>Ask by sensor ID or bed name, or ask about the sample farm.</p>
         </div>
         <div className="khulani-prompts">
-        {prompts.map(prompt => <button type="button" onClick={() => ask(prompt)} key={prompt} disabled={!ready || working}>
+        {[...prompts, "Which bed on the sample farm dried out most?"].map(prompt => <button type="button" onClick={() => ask(prompt)} key={prompt} disabled={!ready || working}>
             {prompt}<span aria-hidden="true">↗</span>
           </button>)}
         </div>
@@ -238,8 +233,8 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
           <button type="submit" className="primary khulani-send" aria-label="Send" disabled={!question.trim() || !ready || working}><span aria-hidden="true">↑</span></button>
         </div>
       </form>
-      {(!ready || working || message) && <p role="status">{!ready ? "Loading your farm data…" : working ? (mode === "gemini" ? "Asking Gemini…" : "Checking your farm data…") : message}</p>}
-      <p className="monitor-note">Use voice for English dictation. Your browser may process speech online. Typed prompts work offline after the app loads.</p>
+      {(!ready || working || message) && <p role="status">{!ready ? "Loading your farm data…" : working ? "Preparing your answer…" : message}</p>}
+      <p className="monitor-note">Use voice for English dictation. Your browser may process speech online. Farm lookups work offline after the app loads. Sample farm prompts go to Gemini. Keep them free of personal or farm-identifying details.</p>
     </section>
   </div>;
 }
