@@ -13,7 +13,9 @@
     "mock-sensor": "node scripts/mock-sensor.mjs"
   },
   "dependencies": {
+    "chart.js": "^4.6.1",
     "firebase": "12.10.0",
+    "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",
     "qrcode": "^1.5.4",
     "react": "19.2.0",

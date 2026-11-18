@@ -295,3 +295,26 @@ textarea { box-sizing: border-box; width: 100%; font: inherit; color: inherit; b
 .sensor-map-heading p { margin-top: .3rem; font-size: .92rem; }
 .sensor-map-heading a { color: #163f2e; font-weight: 650; }
 .sensor-map-frame { display: block; width: 100%; height: clamp(13rem, 42vw, 22rem); border: 1px solid #dce6da; border-radius: .65rem; background: #edf2e9; }
+
+.analytics-filters { margin-block: 1rem; }
+.analytics-presets, .analytics-tabs, .analytics-export { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.analytics-tabs { margin-block: 1rem; }
+.analytics-tabs button[aria-pressed="true"] { background: #163f2e; border-color: #163f2e; color: #fff; }
+.analytics-fields, .analytics-charts { display: grid; gap: .85rem; }
+.analytics-export { justify-content: space-between; margin-top: .9rem; }
+.analytics-charts { gap: 1rem; }
+.analytics-chart { min-width: 0; }
+.chart-canvas { position: relative; height: 16rem; }
+.insight-table { width: 100%; border-collapse: collapse; text-align: left; }
+.insight-table th, .insight-table td { border-top: 1px solid #dce6da; padding: .45rem; overflow-wrap: anywhere; }
+.news-feed { margin-bottom: 1rem; }
+.news-post + .news-post { border-top: 1px solid #dce6da; padding-top: .85rem; }
+.news-post { margin-top: .85rem; }
+.publication-list li > div { width: 100%; min-width: 0; }
+.publication-list .account-links { margin-top: .5rem; }
+.publication-confirm { padding: .75rem; border-radius: .55rem; background: #f5f7f2; }
+.danger-button { border-color: #8b3534; color: #8b2929; }
+@media (min-width: 44rem) {
+  .analytics-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .analytics-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

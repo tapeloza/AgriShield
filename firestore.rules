@@ -5,6 +5,22 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == uid;
     }
 
+    match /publications/{publicationId} {
+      allow read: if true;
+      allow create: if owns(request.resource.data.owner)
+        && get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.role == 'specialist'
+        && request.resource.data.keys().hasOnly(['owner', 'title', 'provenance', 'content', 'permission', 'publishedAt'])
+        && request.resource.data.permission == 'granted'
+        && request.resource.data.publishedAt == request.time
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 1 && request.resource.data.title.size() <= 150
+        && request.resource.data.provenance is string
+        && request.resource.data.provenance.size() >= 1 && request.resource.data.provenance.size() <= 250
+        && request.resource.data.content is string
+        && request.resource.data.content.size() >= 1 && request.resource.data.content.size() <= 12000;
+      allow delete: if owns(resource.data.owner);
+    }
+
     match /accounts/{uid} {
       allow get: if owns(uid);
       allow create, update: if owns(uid)

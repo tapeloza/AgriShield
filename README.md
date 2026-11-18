@@ -162,3 +162,9 @@ The Sensors page shows a map for the selected sensor. To add an exact Google Map
 Without a saved embed, the map uses approximate OpenStreetMap town locations for recognised names, including Nelspruit and Mbombela, or shows a regional map when no town matches. Exact pins are supplied by the farmer. Maps require internet. The existing weather map remains in Local Guide.
 
 Optionally set VITE_GOOGLE_MAPS_EMBED_KEY to a restricted Maps Embed API key to show Google Maps plot searches for sensors without a saved pin. Enable the API in Google Cloud and restrict the key to Maps Embed API and the relevant website domains.
+
+## Insights reports and the public news feed
+
+Insights has All, Sensors, Crops and Soil data views. Choose dates in South African time and optionally filter by reading source. The line chart shows daily moisture averages, the sensor doughnut shows each sensor's share of readings, the crop bar chart compares reading counts, and the soil bands describe observed moisture values. Analytics cover the readings available in the workspace, including the current 100-reading cloud window and available local history. Reports include the logo, selected period, totals and visible charts.
+
+IKS Specialists can publish a draft with a source and recorded knowledge-holder permission to the public Local Guide at /guide. The publisher can delete the public post after confirmation, which also deletes any local draft copy on the current device. Publish the current firestore.rules with the public publications collection before using this on Vercel. Preserve any existing custom rules for other features.

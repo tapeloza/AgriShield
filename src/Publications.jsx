@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { loadState, saveState } from './db.js';
+import { publishPublication, removePublication, watchPublications } from './cloud.js';
 
 const permissionLabels = {
   pending: 'Permission pending',
@@ -7,9 +8,13 @@ const permissionLabels = {
   restricted: 'Restricted',
 };
 
-export default function Publications({ uid }) {
+export default function Publications({ uid, auth }) {
   const key = 'publications:' + uid;
   const [items, setItems] = useState([]);
+  const [published, setPublished] = useState([]);
+  const [publicReady, setPublicReady] = useState(false);
+  const [pending, setPending] = useState(null);
+  const [actionBusy, setActionBusy] = useState(false);
   const [ready, setReady] = useState(false);
   const [writing, setWriting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -27,6 +32,48 @@ export default function Publications({ uid }) {
     });
     return () => { active = false; };
   }, [key]);
+
+  useEffect(() => watchPublications(auth, uid, (entries, fromCache) => {
+    setPublished(entries);
+    setPublicReady(!fromCache);
+  }, () => setPublicReady(false)), [auth, uid]);
+
+  const publicById = new Map(published.map(item => [item.id, item]));
+  const localIds = new Set(items.map(item => item.id));
+  const recent = [
+    ...published.map(item => ({ ...item, time: item.publishedAt?.toMillis() ?? 0, public: true })),
+    ...items.filter(item => !publicById.has(item.id)),
+  ].sort((a, b) => b.time - a.time);
+
+  async function confirmAction() {
+    const { action, item } = pending;
+    if ((action === 'publish' || item.public) && !navigator.onLine) {
+      setMessage('Connect to the internet to change the public feed.');
+      return;
+    }
+    setActionBusy(true);
+    setMessage('');
+    try {
+      if (action === 'publish') {
+        await publishPublication(auth, uid, item);
+        setMessage('Published to the public Local Guide news feed.');
+      } else {
+        setPending(null);
+        if (item.public) await removePublication(auth, item.id);
+        if (localIds.has(item.id)) {
+          const next = items.filter(entry => entry.id !== item.id);
+          await saveState(key, next);
+          setItems(next);
+        }
+        setMessage(item.public ? 'Publication removed from the public feed.' : 'Draft deleted.');
+      }
+      setPending(null);
+    } catch {
+      setMessage('Could not complete the action. Check your connection and the Firestore publication rules.');
+    } finally {
+      setActionBusy(false);
+    }
+  }
 
   async function create(event) {
     event.preventDefault();
@@ -94,15 +141,35 @@ export default function Publications({ uid }) {
     <p className="feedback" role="status">{message}</p>
     <section className="card history" aria-labelledby="publication-recent">
       <h2 id="publication-recent">Recent publications</h2>
-      {!items.length ? <p>No publication drafts yet.</p> :
-        <ul>{items.map(item => <li key={item.id}>
-          <details>
-            <summary>{item.title}</summary>
-            <p>{item.provenance} · {permissionLabels[item.permission]}</p>
-            {item.content && <p className="publication-text">{item.content}</p>}
-          </details>
-          <small>{new Date(item.time).toLocaleDateString('en-ZA')}</small>
+      {!recent.length ? <p>No publication drafts yet.</p> :
+        <ul className="publication-list">{recent.map(item => <li key={item.id}>
+          <div>
+            <details>
+              <summary>{item.title}</summary>
+              <p>{item.provenance} · {permissionLabels[item.permission]}</p>
+              {item.content && <p className="publication-text">{item.content}</p>}
+            </details>
+            <small>{item.public ? 'Public in Local Guide' : 'Private draft'} · {new Date(item.time).toLocaleDateString('en-ZA')}</small>
+            <div className="account-links">
+              {item.public ? <a href="/guide#news-heading">Open public feed</a>
+                : <button type="button" disabled={actionBusy || !publicReady || item.permission !== 'granted' || !item.content}
+                  onClick={() => setPending({ action: 'publish', item })}>Publish to Local Guide</button>}
+              <button type="button" className="danger-button" disabled={actionBusy || !ready || !publicReady}
+                onClick={() => setPending({ action: 'delete', item })}>Delete</button>
+            </div>
+            {pending?.item.id === item.id && <div className="publication-confirm">
+              <p>{pending.action === 'publish'
+                ? 'Publish the title, source and draft text for anyone to read?'
+                : item.public ? 'Remove this publication from the public feed and delete its local draft?' : 'Delete this draft from this device?'}</p>
+              <div className="account-links">
+                <button type="button" className={pending.action === 'publish' ? 'primary' : 'danger-button'}
+                  disabled={actionBusy} onClick={confirmAction}>{pending.action === 'publish' ? 'Confirm publication' : 'Confirm delete'}</button>
+                <button type="button" disabled={actionBusy} onClick={() => setPending(null)}>Cancel</button>
+              </div>
+            </div>}
+          </div>
         </li>)}</ul>}
+      {!publicReady && <p className="monitor-note">Connect to the public feed to publish or delete a publication.</p>}
     </section>
   </>;
 }

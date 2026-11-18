@@ -12,6 +12,7 @@ import Team from './Team.jsx';
 import { mergeSampleHistory, sampleReadings } from './sampleReadings.js';
 import { ReadingList, SensorList } from './ActivityLists.jsx';
 import Publications from './Publications.jsx';
+import NewsFeed from './NewsFeed.jsx';
 import { saveCloudReading, saveCloudSensor, saveSampleReadings, saveSpecialistRole, watchReadings, watchRole, watchSensors } from './cloud.js';
 import QuickTools from './QuickTools.jsx';
 import Support from './Support.jsx';
@@ -23,6 +24,7 @@ import { firstId, initialSensors, requestedSensor, sensorPath } from './sensors.
 import FieldMonitor, { MoistureTrend } from './FieldMonitor.jsx';
 import './style.css';
 
+const Insights = lazy(() => import('./Insights.jsx'));
 const WeatherMap = lazy(() => import('./WeatherMap.jsx'));
 const initial = { crop: 'tomatoes', scenario: 'steady', history: [], tank: 70, demand: false, paused: false, sensors: initialSensors, sensorId: firstId };
 const newFarm = { ...initial, tank: 0, sensors: [], sensorId: '' };
@@ -36,6 +38,8 @@ const demo = /^\/demo\/?$/.test(location.pathname);
 
 const localEndpoint = import.meta.env.DEV || ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 const supportPage = /^\/support\/?$/.test(location.pathname);
+
+const publicGuide = /^\/guide\/?$/.test(location.pathname);
 
 function Root() {
   const [user, setUser] = useState(null);
@@ -118,7 +122,7 @@ function App({ user, ready }) {
   const [loaded, setLoaded] = useState(false);
   const [storage, setStorage] = useState('');
   const [offline, setOffline] = useState(import.meta.env.PROD ? 'Preparing offline access…' : 'Offline cache available in production preview');
-  const [view, setView] = useState('dashboard');
+  const [view, setView] = useState(publicGuide ? 'library' : 'dashboard');
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [reading, setReading] = useState(null);
@@ -417,21 +421,24 @@ function App({ user, ready }) {
     <main id="main" className={'wrap' + (authPage ? ' auth-main' : '')} tabIndex={-1}>
       {storage && <p className="notice" role="status">{storage}</p>}
       {supportPage ? <Support /> : authPage ? <Account page={authPage} user={user} ready={ready} />
-        : !workspace ? <section className="welcome welcome-hero">
+        : !workspace && !publicGuide ? <section className="welcome welcome-hero">
           <h1>{t("Manage your farm with AgriShield")}</h1>
           <p className="intro">Monitor field conditions, review readings and find crop guidance.</p>
           {!ready ? <p role="status">Checking your session…</p> : <div className="account-links">
             <a className="button primary" href={sensorPath('/signup')}>{t("Create an account")}</a>
             <a className="button" href={sensorPath('/signin')}>{t("Sign in")}</a>
           </div>}
-          <p><a href={sensorPath('/demo')}>{t("Explore the offline demo")}</a></p>
+          <p><a href={sensorPath('/demo')}>{t("Explore the offline demo")}</a> · <a href="/guide">{t('Local Guide')}</a></p>
         </section>
         : view === 'account' ? <FarmProfile user={user} auth={auth} />
         : view === 'team' ? <Team uid={user.uid} />
         : view === 'insights' ? <>
-          <h1>{t("Insights")}</h1>
-          <p className="intro">Activity saved in this workspace.</p>
-          {!loaded ? <p role="status">Loading activity…</p> : <ActivityStats sensors={state.sensors} history={history} onView={setView} />}
+          {!loaded ? <p role="status">Loading activity…</p> :
+            <Suspense fallback={<p role="status">Loading insights…</p>}>
+              <Insights readings={history} cropName={cropName}>
+                <ActivityStats sensors={state.sensors} history={history} onView={setView} />
+              </Insights>
+            </Suspense>}
         </> : view === 'weather' ? <Suspense fallback={<p role="status">Loading weather tools…</p>}>
           <WeatherMap workspaceKey={farmKey} onClose={() => setView('library')} />
         </Suspense>
@@ -457,7 +464,7 @@ function App({ user, ready }) {
           {loaded && <SensorList sensors={state.sensors} readings={history} timestamp={formatTime}
             sourceLabels={sourceLabels} onOpen={openSensor} />}
         </> : view === 'dashboard' && !demo && !role ? <p role="status">Loading your workspace…</p>
-        : view === 'dashboard' && specialist ? <Publications uid={user.uid} />
+        : view === 'dashboard' && specialist ? <Publications uid={user.uid} auth={auth} />
         : view === 'dashboard' ? <>
         <section className="dashboard-hero">
           <div className="dashboard-hero-copy">
@@ -558,6 +565,7 @@ function App({ user, ready }) {
             <button type="button" className="primary" onClick={() => setView('weather')}>Open weather &amp; map</button>
           </div>
         </section>
+        <NewsFeed auth={auth} />
         <div className="card filters">
           <div><label htmlFor="query">{t("Search the library")}</label><input id="query" type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Try morogo or water" /></div>
           <div><label htmlFor="filter">{t("Filter by crop")}</label><select id="filter" value={filter} onChange={event => setFilter(event.target.value)}>

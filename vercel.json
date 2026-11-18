@@ -3,6 +3,7 @@
     { "source": "/signup", "destination": "/index.html" },
     { "source": "/signin", "destination": "/index.html" },
     { "source": "/demo", "destination": "/index.html" },
-    { "source": "/support", "destination": "/index.html" }
+    { "source": "/support", "destination": "/index.html" },
+    { "source": "/guide", "destination": "/index.html" }
   ]
 }
