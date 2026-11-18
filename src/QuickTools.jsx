@@ -5,7 +5,7 @@ import voiceIndex from './sensor-voice.json';
 
 const preference = 'agrishield.accessibility';
 
-export default function QuickTools({ speech, speechClips, demo }) {
+export default function QuickTools({ speech, speechClips, demo, workspaceKey }) {
   const { t } = useLanguage();
   const [mode, setMode] = useState(() => {
     try { return localStorage.getItem(preference) === 'on'; } catch { return false; }
@@ -106,6 +106,6 @@ export default function QuickTools({ speech, speechClips, demo }) {
       <div role="status">{message}</div>
       {speech && <details><summary>Reading transcript</summary><p lang="en-ZA">{speech}</p></details>}
     </section>
-    <Khulani dialogRef={khulani} onClose={() => quickTrigger.current?.focus()} />
+    <Khulani key={workspaceKey} workspaceKey={workspaceKey} dialogRef={khulani} onClose={() => quickTrigger.current?.focus()} />
   </>;
 }

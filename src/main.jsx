@@ -15,6 +15,7 @@ import Publications from './Publications.jsx';
 import NewsFeed from './NewsFeed.jsx';
 import { saveCloudReading, saveCloudSensor, saveSampleReadings, saveSpecialistRole, watchReadings, watchRole, watchSensors } from './cloud.js';
 import QuickTools from './QuickTools.jsx';
+import Alerts from './Alerts.jsx';
 import Support from './Support.jsx';
 import FarmOnboarding from './FarmOnboarding.jsx';
 import SensorTabs from './SensorTabs.jsx';
@@ -39,6 +40,7 @@ const demo = /^\/demo\/?$/.test(location.pathname);
 const localEndpoint = import.meta.env.DEV || ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 const supportPage = /^\/support\/?$/.test(location.pathname);
 
+const publicAlerts = /^\/alerts\/?$/.test(location.pathname);
 const publicGuide = /^\/guide\/?$/.test(location.pathname);
 
 function Root() {
@@ -82,8 +84,8 @@ function useWorkspaceRole(user) {
 
 function WorkspaceNav({ className = '', view, onView, specialist }) {
   const { t } = useLanguage();
-  const links = specialist ? [['dashboard', 'Publications'], ['library', 'Local Guide']]
-    : [['dashboard', 'Dashboard'], ['insights', 'Insights'], ['sensors', 'Sensors'], ['library', 'Local Guide']];
+  const links = specialist ? [['dashboard', 'Publications'], ['library', 'Local Guide'], ['alerts', 'Alerts']]
+    : [['dashboard', 'Dashboard'], ['insights', 'Insights'], ['sensors', 'Sensors'], ['library', 'Local Guide'], ['alerts', 'Alerts']];
   return <nav className={'nav ' + className} aria-label={t('Main navigation')}>
     {links.map(([id, title]) =>
       <button key={id} aria-current={view === id ? 'page' : undefined} onClick={() => onView(id)}>{t(title)}</button>)}
@@ -122,7 +124,8 @@ function App({ user, ready }) {
   const [loaded, setLoaded] = useState(false);
   const [storage, setStorage] = useState('');
   const [offline, setOffline] = useState(import.meta.env.PROD ? 'Preparing offline access…' : 'Offline cache available in production preview');
-  const [view, setView] = useState(publicGuide ? 'library' : 'dashboard');
+  const [view, setView] = useState(publicAlerts ? 'alerts' : publicGuide ? 'library' : 'dashboard');
+  const [weatherReturn, setWeatherReturn] = useState('library');
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [reading, setReading] = useState(null);
@@ -421,14 +424,14 @@ function App({ user, ready }) {
     <main id="main" className={'wrap' + (authPage ? ' auth-main' : '')} tabIndex={-1}>
       {storage && <p className="notice" role="status">{storage}</p>}
       {supportPage ? <Support /> : authPage ? <Account page={authPage} user={user} ready={ready} />
-        : !workspace && !publicGuide ? <section className="welcome welcome-hero">
+        : !workspace && !publicGuide && !publicAlerts ? <section className="welcome welcome-hero">
           <h1>{t("Manage your farm with AgriShield")}</h1>
           <p className="intro">Monitor field conditions, review readings and find crop guidance.</p>
           {!ready ? <p role="status">Checking your session…</p> : <div className="account-links">
             <a className="button primary" href={sensorPath('/signup')}>{t("Create an account")}</a>
             <a className="button" href={sensorPath('/signin')}>{t("Sign in")}</a>
           </div>}
-          <p><a href={sensorPath('/demo')}>{t("Explore the offline demo")}</a> · <a href="/guide">{t('Local Guide')}</a></p>
+          <p><a href={sensorPath('/demo')}>{t("Explore the offline demo")}</a> · <a href="/guide">{t('Local Guide')}</a> · <a href="/alerts">{t('Alerts')}</a></p>
         </section>
         : view === 'account' ? <FarmProfile user={user} auth={auth} />
         : view === 'team' ? <Team uid={user.uid} />
@@ -439,8 +442,11 @@ function App({ user, ready }) {
                 <ActivityStats sensors={state.sensors} history={history} onView={setView} />
               </Insights>
             </Suspense>}
-        </> : view === 'weather' ? <Suspense fallback={<p role="status">Loading weather tools…</p>}>
-          <WeatherMap workspaceKey={farmKey} onClose={() => setView('library')} />
+        </> : view === 'alerts' ? <Alerts sensors={state.sensors} readings={history} loaded={loaded}
+          demo={demo} sampleStatus={status} formatTime={formatTime} onWeather={() => { setWeatherReturn('alerts'); setView('weather'); }}
+          onSensors={workspace && !specialist ? () => setView('sensors') : null} />
+        : view === 'weather' ? <Suspense fallback={<p role="status">Loading weather tools…</p>}>
+          <WeatherMap workspaceKey={farmKey} onClose={() => setView(weatherReturn)} />
         </Suspense>
         : view === 'readings' ? <>
           <h1>{t('Saved readings')}</h1>
@@ -562,7 +568,7 @@ function App({ user, ready }) {
           <p className="monitor-note">Check a five-day forecast for your farm and open official South African Weather Service warnings.</p>
           <a href="https://www.weathersa.co.za/warnings?region=rsa" target="_blank" rel="noreferrer">{t("View official weather warnings")}</a>
           <div className="account-links weather-tools">
-            <button type="button" className="primary" onClick={() => setView('weather')}>Open weather &amp; map</button>
+            <button type="button" className="primary" onClick={() => { setWeatherReturn('library'); setView('weather'); }}>Open weather &amp; map</button>
           </div>
         </section>
         <NewsFeed auth={auth} />
@@ -585,7 +591,7 @@ function App({ user, ready }) {
       {workspace && loaded && needsDetails && role === 'grower' && !state.onboardingDismissed && user && !demo &&
         <FarmOnboarding uid={user.uid} onClose={closeOnboarding} />}
     </main>
-    <QuickTools speech={speech} speechClips={speechClips} demo={demo} />
+    <QuickTools speech={speech} speechClips={speechClips} demo={demo} workspaceKey={workspace ? farmKey : 'public'} />
     {import.meta.env.PROD && <footer className="wrap footer"><span role="status">{t(offline)}</span></footer>}
   </>;
 }

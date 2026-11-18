@@ -4,6 +4,7 @@
     { "source": "/signin", "destination": "/index.html" },
     { "source": "/demo", "destination": "/index.html" },
     { "source": "/support", "destination": "/index.html" },
+    { "source": "/alerts", "destination": "/index.html" },
     { "source": "/guide", "destination": "/index.html" }
   ]
 }
