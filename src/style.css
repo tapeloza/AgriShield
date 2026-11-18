@@ -260,3 +260,6 @@ body { padding-bottom: 5rem; }
 .support-offices a, .support-institutions a { color: #163f2e; }
 .support-institutions li + li { margin-top: .65rem; }
 .reading-mode .welcome-hero .intro { color: #fff; }
+.publication-create { margin-top: 1rem; background: #daf0ad; color: #163f2e; border-color: #daf0ad; }
+.publication-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+textarea { box-sizing: border-box; width: 100%; font: inherit; color: inherit; border: 1px solid #819889; border-radius: .55rem; padding: .55rem .65rem; }

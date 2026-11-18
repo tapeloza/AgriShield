@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useLanguage } from './Language.jsx';
 import { initializeApp } from 'firebase/app';
 import {
-  connectAuthEmulator, createUserWithEmailAndPassword, getAuth, GoogleAuthProvider,
+  connectAuthEmulator, createUserWithEmailAndPassword, getAdditionalUserInfo, getAuth, GoogleAuthProvider,
   sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup,
 } from 'firebase/auth';
 import { sensorPath } from './sensors.js';
+import { saveState } from './db.js';
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -48,6 +49,7 @@ const errorMessages = {
 export default function Account({ page, user, ready }) {
   const { t } = useLanguage();
   const signup = page === 'signup';
+  const [role, setRole] = useState('grower');
   const [reset, setReset] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -56,8 +58,8 @@ export default function Account({ page, user, ready }) {
   const heading = t(signup ? 'Create your account' : reset ? 'Reset your password' : 'Sign in to AgriShield');
 
   useEffect(() => {
-    if (user) location.replace(sensorPath('/'));
-  }, [user]);
+    if (user && !busy) location.replace(sensorPath('/'));
+  }, [user, busy]);
 
   async function run(action, fallback) {
     setMessage('');
@@ -65,6 +67,12 @@ export default function Account({ page, user, ready }) {
     try { await action(); }
     catch (error) { setMessage(errorMessages[error.code] || fallback); }
     finally { setBusy(false); }
+  }
+
+  async function finishSignup(credential) {
+    if (signup && role === 'specialist' && getAdditionalUserInfo(credential)?.isNewUser) {
+      await saveState('role:' + credential.user.uid, 'specialist');
+    }
   }
 
   function submit(event) {
@@ -78,7 +86,7 @@ export default function Account({ page, user, ready }) {
       }, 'Could not request a reset link. Try again.');
     }
     return run(() => signup
-      ? createUserWithEmailAndPassword(auth, address, password)
+      ? createUserWithEmailAndPassword(auth, address, password).then(finishSignup)
       : signInWithEmailAndPassword(auth, address, password),
     signup ? 'Could not create your account. Try again.' : 'Could not sign in. Try again.');
   }
@@ -105,6 +113,13 @@ export default function Account({ page, user, ready }) {
         : user ? <p role="status">Opening your dashboard…</p> : <>
           <form onSubmit={submit}>
             <fieldset disabled={busy}>
+              {signup && <>
+                <label htmlFor="workspace-role">Account type</label>
+                <select id="workspace-role" value={role} onChange={event => setRole(event.target.value)}>
+                  <option value="grower">Grower</option>
+                  <option value="specialist">IKS Specialist</option>
+                </select>
+              </>}
               <label htmlFor="auth-email">{t("Email address")}</label>
               <input id="auth-email" type="email" autoComplete={reset ? 'email' : 'username'} required value={email}
                 onChange={event => setEmail(event.target.value)} />
@@ -118,7 +133,7 @@ export default function Account({ page, user, ready }) {
             </fieldset>
           </form>
           {!reset && <button className="wide" disabled={busy} onClick={() => run(
-            () => signInWithPopup(auth, new GoogleAuthProvider()),
+            () => signInWithPopup(auth, new GoogleAuthProvider()).then(finishSignup),
             'Could not complete Google sign-in. Try opening AgriShield in Chrome or Edge.',
           )}>{t("Continue with Google")}</button>}
           {!signup && <button className="wide" type="button" disabled={busy} onClick={toggleReset}>

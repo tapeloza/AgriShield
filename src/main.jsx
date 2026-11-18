@@ -9,6 +9,8 @@ import Account, { auth, authPage } from './Account.jsx';
 import FarmProfile from './FarmProfile.jsx';
 import ProfileMenu from './ProfileMenu.jsx';
 import Team from './Team.jsx';
+import Publications from './Publications.jsx';
+import { saveCloudReading, saveSpecialistRole, watchReadings, watchRole } from './cloud.js';
 import QuickTools from './QuickTools.jsx';
 import Support from './Support.jsx';
 import FarmOnboarding from './FarmOnboarding.jsx';
@@ -45,9 +47,34 @@ function Root() {
   return <App key={authPage ?? user?.uid ?? 'guest'} user={user} ready={ready} />;
 }
 
-function WorkspaceNav({ className = '', view, onView }) {
+function useWorkspaceRole(user) {
+  const [role, setRole] = useState(null);
+  useEffect(() => {
+    if (!user || demo || authPage || supportPage) return;
+    let active = true;
+    let unsubscribe;
+    const key = 'role:' + user.uid;
+    loadState(key).catch(() => null).then(local => {
+      if (!active) return;
+      setRole(local === 'specialist' ? 'specialist' : 'grower');
+      unsubscribe = watchRole(auth, user.uid, snapshot => {
+        if (snapshot.data()?.role === 'specialist') {
+          setRole('specialist');
+          saveState(key, 'specialist').catch(() => {});
+        } else if (local === 'specialist' && !snapshot.metadata.fromCache) {
+          saveSpecialistRole(auth, user.uid).catch(() => {});
+        }
+      }, () => {});
+    });
+    return () => { active = false; unsubscribe?.(); };
+  }, [user]);
+  return role;
+}
+
+function WorkspaceNav({ className = '', view, onView, specialist }) {
   const { t } = useLanguage();
-  const links = [['dashboard', 'Dashboard'], ['insights', 'Insights'], ['sensors', 'Sensors'], ['library', 'Local Guide']];
+  const links = specialist ? [['dashboard', 'Publications'], ['library', 'Local Guide']]
+    : [['dashboard', 'Dashboard'], ['insights', 'Insights'], ['sensors', 'Sensors'], ['library', 'Local Guide']];
   return <nav className={'nav ' + className} aria-label={t('Main navigation')}>
     {links.map(([id, title]) =>
       <button key={id} aria-current={view === id ? 'page' : undefined} onClick={() => onView(id)}>{t(title)}</button>)}
@@ -68,8 +95,12 @@ function ActivityStats({ sensors, history }) {
 
 function App({ user, ready }) {
   const { t } = useLanguage();
+  const role = useWorkspaceRole(user);
+  const specialist = role === 'specialist';
   const farmKey = user && !demo ? 'farm:' + user.uid : 'demo';
   const workspace = !authPage && !supportPage && (Boolean(user) || demo);
+  const [cloudReadings, setCloudReadings] = useState([]);
+  const [cloudStatus, setCloudStatus] = useState('');
   const [state, setState] = useState(demo ? initial : newFarm);
   const [loaded, setLoaded] = useState(false);
   const [storage, setStorage] = useState('');
@@ -147,8 +178,19 @@ function App({ user, ready }) {
     setState(old => ({ ...old, onboardingDismissed: true }));
   }
 
+  useEffect(() => {
+    if (!user || demo || !workspace || role !== 'grower') return;
+    return watchReadings(auth, user.uid, setCloudReadings, () => {
+      setCloudStatus('Cloud readings are unavailable. Saved readings remain on this device.');
+    });
+  }, [user, workspace, role]);
+
+  const cloudIds = new Set(cloudReadings.map(item => item.id));
+  const history = [...cloudReadings, ...state.history.filter(item => !item.id || !cloudIds.has(item.id))]
+    .sort((first, second) => second.time - first.time);
+
   const sensorLocation = state.sensors.find(item => item.id === state.sensorId) ?? state.sensors[0];
-  const sensorHistory = state.history.filter(item => (item.sensorId ?? firstId) === sensorLocation?.id);
+  const sensorHistory = history.filter(item => (item.sensorId ?? firstId) === sensorLocation?.id);
   const missingSensor = loaded && requestedSensor && !state.sensors.some(item => item.id === requestedSensor)
     ? requestedSensor : '';
   const crop = crops[state.crop];
@@ -190,15 +232,22 @@ function App({ user, ready }) {
   }
 
   function record(sample) {
+    const sensorId = sensorLocation.id;
+    const saved = { ...sample, id: crypto.randomUUID(), sensorId, crop: state.crop, time: Date.now() };
     setState(old => {
-      const sensorId = sensorLocation.id;
       const isSelected = item => (item.sensorId ?? firstId) === sensorId;
       const previous = old.history.filter(isSelected).slice(0, 29);
       const other = old.history.filter(item => !isSelected(item));
       return { ...old, history: [
-        { ...sample, sensorId, crop: state.crop, time: Date.now() }, ...previous, ...other,
+        saved, ...previous, ...other,
       ] };
     });
+    if (user && !demo && sample.source !== 'simulation') {
+      setCloudStatus('Cloud sync pending.');
+      saveCloudReading(auth, user.uid, saved)
+        .then(() => setCloudStatus('Reading synced to Firebase.'))
+        .catch(() => setCloudStatus('Cloud sync unavailable. Reading saved on this device.'));
+    }
   }
 
   async function readSensor() {
@@ -219,13 +268,22 @@ function App({ user, ready }) {
   }
 
   const sample = demoReadings[state.scenario];
-  const speech = workspace && loaded && sensorLocation && current ? [
+  const speech = workspace && !specialist && loaded && sensorLocation && current ? [
     'Sensor ' + sensorLocation.id + '. ' + sensorLocation.plot + ', ' + sensorLocation.bed + '.',
     sourceLabels[current.source] + '. Soil moisture: ' + Number(current.moisture.toFixed(1)) + ' percent.',
     ...(demo ? ['Simulated soil pH: ' + sample.ph + '. Temperature: ' + sample.temperature +
       ' degrees Celsius. Rainfall: ' + sample.rainfall + ' millimetres. Soil nutrients: ' + sample.nutrients +
       '. Reservoir: ' + state.tank + ' percent.'] : []),
   ].join(' ') : '';
+
+  const digits = number => [...String(Number(number.toFixed(1)))].map(character =>
+    character === '.' ? 'point' : character === '-' ? 'minus' : character);
+  const speechClips = speech ? [
+    current.source, 'moisture', ...digits(current.moisture), 'percent',
+    ...(demo ? ['ph', ...digits(sample.ph), 'temperature', ...digits(sample.temperature), 'celsius',
+      'rainfall', ...digits(sample.rainfall), 'millimetres', 'nutrients', sample.nutrients.toLowerCase(),
+      'reservoir', ...digits(state.tank), 'percent'] : []),
+  ] : [];
 
   const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const results = library.filter(entry => {
@@ -241,16 +299,16 @@ function App({ user, ready }) {
         <a href="/" className="brand brand-wordmark">
           <img src="/agrishield-logo.png" alt="AgriShield" width="1024" height="572" />
         </a>
-        {workspace && <WorkspaceNav className="desktop-nav" view={view} onView={setView} />}
+        {workspace && <WorkspaceNav className="desktop-nav" specialist={specialist} view={view} onView={setView} />}
         <div className="header-actions">
           {workspace && <button type="button" className="mobile-nav-toggle" popoverTarget="workspace-navigation"
             aria-label={t('Menu')} title={t('Menu')}>☰</button>}
           <LanguageSelect />
-          {workspace && <ProfileMenu user={user} demo={demo}
+          {workspace && <ProfileMenu user={user} demo={demo} auth={auth}
             onAccount={() => setView('account')} onTeam={() => setView('team')} />}
         </div>
         {workspace && <div id="workspace-navigation" className="workspace-menu" popover="auto">
-          <WorkspaceNav view={view} onView={next => {
+          <WorkspaceNav specialist={specialist} view={view} onView={next => {
             document.getElementById('workspace-navigation').hidePopover();
             setView(next);
           }} />
@@ -274,7 +332,7 @@ function App({ user, ready }) {
         : view === 'insights' ? <>
           <h1>{t("Insights")}</h1>
           <p className="intro">Activity saved in this workspace.</p>
-          {!loaded ? <p role="status">Loading activity…</p> : <ActivityStats sensors={state.sensors} history={state.history} />}
+          {!loaded ? <p role="status">Loading activity…</p> : <ActivityStats sensors={state.sensors} history={history} />}
         </> : view === 'sensors' ? <>
           <h1>{t("Sensors")}</h1>
           <p className="intro">Register devices, update field locations and print QR labels.</p>
@@ -282,7 +340,9 @@ function App({ user, ready }) {
             <SensorRegister key={sensorLocation?.id ?? 'empty'} sensors={state.sensors} sensor={sensorLocation}
               missing={missingSensor} disabled={busy} lastSeen={sensorHistory[0] ? formatTime(sensorHistory[0].time) : ''}
               onSelect={selectSensor} onSave={saveSensor} />}
-        </> : view === 'dashboard' ? <>
+        </> : view === 'dashboard' && !demo && !role ? <p role="status">Loading your workspace…</p>
+        : view === 'dashboard' && specialist ? <Publications uid={user.uid} />
+        : view === 'dashboard' ? <>
         <section className="dashboard-hero">
           <div className="dashboard-hero-copy">
             <p className="workspace-label">{t(demo ? 'Demo workspace' : 'Farm workspace')}</p>
@@ -291,7 +351,7 @@ function App({ user, ready }) {
               : 'See field conditions and recent activity from your farm.'}</p>
           </div>
         </section>
-        {loaded && <ActivityStats sensors={state.sensors} history={state.history} />}
+        {loaded && <ActivityStats sensors={state.sensors} history={history} />}
         {!loaded ? <p role="status">Loading your dashboard…</p> : !sensorLocation ? <section className="card">
           <h2>{t("No field sensors yet")}</h2>
           <p className="monitor-note">Register a sensor to start collecting readings for your farm.</p>
@@ -338,6 +398,7 @@ function App({ user, ready }) {
               <button disabled={!loaded || busy} onClick={readSensor}>Read endpoint</button>
             </details>
             <p role="status" className="feedback">{sensor}</p>
+            {!demo && cloudStatus && <p className="monitor-note" role="status">{cloudStatus}</p>}
           </section>
         </div>
         {demo && <><FieldMonitor scenario={state.scenario} tank={state.tank} demand={demand} paused={state.paused}
@@ -379,10 +440,10 @@ function App({ user, ready }) {
           </article>)}
         </div>
       </>}
-      {workspace && loaded && needsDetails && !state.onboardingDismissed && user && !demo &&
+      {workspace && loaded && needsDetails && role === 'grower' && !state.onboardingDismissed && user && !demo &&
         <FarmOnboarding uid={user.uid} onClose={closeOnboarding} />}
     </main>
-    <QuickTools speech={speech} demo={demo} />
+    <QuickTools speech={speech} speechClips={speechClips} demo={demo} />
     {import.meta.env.PROD && <footer className="wrap footer"><span role="status">{t(offline)}</span></footer>}
   </>;
 }

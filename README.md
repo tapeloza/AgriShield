@@ -121,7 +121,7 @@ The header uses the supplied AgriShield logo. On narrow screens, the navigation 
 
 ## Quick tools
 
-The floating button opens sensor read-aloud, agricultural support and accessibility mode. Read-aloud uses the browser's speech synthesis and an English device voice. It identifies the selected sensor and reading source. The demo also reads simulated pH, temperature, rainfall, nutrient status and reservoir level. Offline speech depends on a locally installed voice.
+The floating button opens sensor read-aloud, agricultural support and accessibility mode. Read-aloud uses bundled English audio and announces the reading source. The transcript also identifies the selected sensor. The demo also reads simulated pH, temperature, rainfall, nutrient status and reservoir level. Audio works offline after the app has cached the voice file.
 
 The support page at /support lists district offices for Limpopo and Mpumalanga and links to national agricultural resources. The bundled directory is available offline and external websites need internet. Call the district office to locate the extension officer for your farm area.
 
@@ -130,3 +130,11 @@ Accessibility mode increases the base text size, strengthens contrast and disabl
 ## Deploy on Vercel
 
 Add VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID and VITE_FIREBASE_APP_ID to the Vercel project's Production environment using your Firebase Web app values. Redeploy after saving the variables. Add the production hostname in Firebase Authentication under Settings → Authorized domains for Google sign-in. The Vercel rewrites serve the app on direct links to signup, sign-in, the demo and support.
+
+## Specialist accounts and sensor data
+
+Choose **IKS Specialist** during account creation to open the publication workspace. Drafts are saved privately on this device. The form captures provenance and permission status before accepting the draft text. A title and provenance note should omit restricted information while permission is pending.
+
+To enable cloud readings, create a Cloud Firestore database in the same Firebase project as Authentication, then publish the included firestore.rules. For a project with existing rules, merge the accounts rules into its existing configuration. The prototype writes verified endpoint responses to accounts/{uid}/readings/{readingId}. Each record includes sensorId, crop, time (Unix milliseconds), source and moisture percentage. The mock source is labelled. Simulation is kept local. The owner-only rules protect each account's readings. The app subscribes to up to 100 recent cloud readings and retains its local history. Sensor registrations and publication drafts are device-local, and no LLM is connected.
+
+For emulator testing only, VITE_FIRESTORE_EMULATOR_URL can be set to http://127.0.0.1:8080 alongside the Auth Emulator setting. Run the Auth and Firestore emulators with the included firebase.json and a demo project.

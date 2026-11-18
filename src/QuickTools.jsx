@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLanguage } from './Language.jsx';
+import voiceIndex from './sensor-voice.json';
 
 const preference = 'agrishield.accessibility';
 
-export default function QuickTools({ speech, demo }) {
+export default function QuickTools({ speech, speechClips, demo }) {
   const { t } = useLanguage();
   const [mode, setMode] = useState(() => {
     try { return localStorage.getItem(preference) === 'on'; } catch { return false; }
   });
   const [speaking, setSpeaking] = useState(false);
   const [message, setMessage] = useState('');
+  const audio = useRef(null);
+  const playback = useRef([]);
+  const request = useRef(0);
 
   useEffect(() => {
     document.documentElement.classList.toggle('reading-mode', mode);
@@ -17,18 +21,16 @@ export default function QuickTools({ speech, demo }) {
     return () => document.documentElement.classList.remove('reading-mode');
   }, [mode]);
 
-  useEffect(() => {
-    return () => window.speechSynthesis?.cancel();
+  useEffect(() => () => {
+    request.current += 1;
+    audio.current?.context.close();
   }, []);
 
-  function speak() {
-    const engine = window.speechSynthesis;
-    if (!engine || !window.SpeechSynthesisUtterance) {
-      setMessage('This browser does not support reading aloud.');
-      return;
-    }
+  async function speak() {
+    const token = ++request.current;
     if (speaking) {
-      engine.cancel();
+      playback.current.forEach(source => source.stop());
+      playback.current = [];
       setSpeaking(false);
       setMessage('');
       return;
@@ -37,21 +39,49 @@ export default function QuickTools({ speech, demo }) {
       setMessage('Select a sensor with a reading on the dashboard first.');
       return;
     }
-    const utterance = new SpeechSynthesisUtterance(speech);
-    const localEnglish = engine.getVoices().filter(voice => voice.localService && voice.lang.startsWith('en'));
-    utterance.voice = localEnglish.find(voice => voice.lang === 'en-ZA') ?? localEnglish[0] ?? null;
-    utterance.lang = utterance.voice?.lang || 'en-ZA';
-    utterance.rate = 0.9;
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = event => {
-      setSpeaking(false);
-      if (event.error !== 'canceled' && event.error !== 'interrupted') {
-        setMessage('Unable to play. Check the speech voices installed on this device.');
-      }
-    };
-    setMessage('');
+    const Audio = window.AudioContext || window.webkitAudioContext;
+    if (!Audio) {
+      setMessage('Audio is unavailable in this browser. The reading is shown below.');
+      return;
+    }
+
     setSpeaking(true);
-    engine.speak(utterance);
+    setMessage('Starting audio…');
+    try {
+      if (!audio.current) {
+        const context = new Audio();
+        audio.current = { context };
+      }
+      const { context } = audio.current;
+      await context.resume();
+      if (!audio.current.buffer) {
+        const response = await fetch('/sensor-voice.wav');
+        if (!response.ok) throw new Error('Audio file unavailable');
+        audio.current.buffer = await context.decodeAudioData(await response.arrayBuffer());
+      }
+      if (request.current !== token) return;
+      let startTime = context.currentTime + 0.04;
+      playback.current = speechClips.map(clip => {
+        const [offset, duration] = voiceIndex[clip];
+        const source = context.createBufferSource();
+        source.buffer = audio.current.buffer;
+        source.connect(context.destination);
+        source.start(startTime, offset, duration);
+        startTime += duration + 0.045;
+        return source;
+      });
+      playback.current.at(-1).onended = () => {
+        if (request.current !== token) return;
+        playback.current = [];
+        setSpeaking(false);
+        setMessage('');
+      };
+      setMessage('Reading the selected sensor aloud.');
+    } catch {
+      if (request.current !== token) return;
+      setSpeaking(false);
+      setMessage('Audio could not start. Check your audio output and tap to retry.');
+    }
   }
 
   return <>
@@ -65,8 +95,9 @@ export default function QuickTools({ speech, demo }) {
       <button type="button" aria-pressed={mode} onClick={() => setMode(value => !value)}>
         {t('Accessibility mode')} <small>{t(mode ? 'On' : 'Off')}</small>
       </button>
-      <p className="monitor-note">Read-aloud uses an English voice provided by your device.</p>
+      <p className="monitor-note">Read-aloud uses the bundled English voice.</p>
       <div role="status">{message}</div>
+      {speech && <details><summary>Reading transcript</summary><p lang="en-ZA">{speech}</p></details>}
     </section>
   </>;
 }
