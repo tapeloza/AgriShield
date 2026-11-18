@@ -16,6 +16,7 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
   const storageKey = 'agrishield.khulani:' + workspaceKey;
   const [history, setHistory] = useState(() => readHistory(storageKey));
   const [question, setQuestion] = useState('');
+  const [mode, setMode] = useState('farm');
   const [listening, setListening] = useState(false);
   const [message, setMessage] = useState('');
   const recognition = useRef(null);
@@ -61,14 +62,45 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
     window.speechSynthesis?.cancel();
     pending.current = true;
     setWorking(true);
-    const saved = await loadState('weather:' + workspaceKey).catch(() => null);
+    setMessage('');
+    let answer;
+    try {
+      if (mode === 'gemini') {
+        const token = await auth?.currentUser?.getIdToken();
+        if (!token) throw new Error('Sign in again to use Gemini sample chat.');
+        const turns = history.filter(entry => entry.mode === 'gemini').slice(-3)
+          .map(entry => ({ question: entry.question, text: entry.answer.text.slice(0, 900) }));
+        const response = await fetch('/api/khulani', {
+          method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: text, turns }), signal: AbortSignal.timeout(24000),
+        });
+        if (!response.ok) {
+          if (response.status === 429) throw new Error('Gemini’s free quota is busy. Try again later or use My farm.');
+          if (response.status === 401) throw new Error('Sign in again to use Gemini sample chat.');
+          throw new Error('Gemini sample chat is unavailable. Try again or use My farm.');
+        }
+        answer = await response.json();
+        if (typeof answer.text !== 'string' || !Array.isArray(answer.sources)) throw new Error('Gemini returned an unexpected reply.');
+      }
+    } catch (error) {
+      if (!cancelled.current) {
+        pending.current = false;
+        setWorking(false);
+        setQuestion(text);
+        setMessage(error instanceof TypeError || error.name === 'TimeoutError'
+          ? 'Gemini needs an internet connection. Try again or use My farm.'
+          : error.message);
+      }
+      return;
+    }
+    const saved = mode === 'farm' ? await loadState('weather:' + workspaceKey).catch(() => null) : null;
     if (cancelled.current) return;
     const location = saved?.location;
     const point = Number.isFinite(location?.lat) && Number.isFinite(location?.lng)
       ? location.lat.toFixed(4) + ',' + location.lng.toFixed(4) : null;
     const weather = point && saved?.forecast?.point === point ? saved : null;
-    const entry = { id: crypto.randomUUID(), question: text,
-      answer: answerQuestion(text, { sensors, readings, weather, publications }) };
+    const entry = { id: crypto.randomUUID(), question: text, mode,
+      answer: answer ?? answerQuestion(text, { sensors, readings, weather, publications }) };
     pending.current = false;
     setWorking(false);
     const next = [...history, entry];
@@ -164,13 +196,18 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
       <header className="khulani-header">
         <h1 id="khulani-title" ref={heading} tabIndex={-1}>Khulani AI</h1>
         <p>Chat history stays on this device.</p>
+        <div className="khulani-modes" role="group" aria-label="Chat mode">
+          <button type="button" disabled={working} aria-pressed={mode === 'farm'} onClick={() => { setMode('farm'); setQuestion(''); setMessage(''); }}>My farm</button>
+          <button type="button" disabled={working} aria-pressed={mode === 'gemini'} onClick={() => { setMode('gemini'); setQuestion(''); setMessage(''); }}>Gemini sample</button>
+        </div>
+        {mode === 'gemini' && <p>Google processes prompts in this mode. Use sample questions without personal or farm-identifying details.</p>}
         {history.length > 0 && <button type="button" className="khulani-clear" disabled={working} onClick={clearChat}>Clear chat</button>}
       </header>
       <section hidden={history.length === 0} className="khulani-transcript" ref={transcript} role="log" aria-label="Chat history" tabIndex={0}>
         {history.map(entry => <article className="khulani-turn" key={entry.id} id={'khulani-turn-' + entry.id} tabIndex={-1}>
           <p className="khulani-question"><strong>You</strong><br />{entry.question}</p>
           <div className="khulani-answer">
-            <h3>Khulani{entry.bed ? ' · Earlier sample answer' : ''}</h3>
+            <h3>Khulani{entry.mode === 'gemini' ? ' · Gemini sample' : entry.bed ? ' · Earlier sample answer' : ''}</h3>
             <p>{entry.answer.text}</p>
             {entry.answer.sources.length > 0 && <details>
               <summary>Sources and permissions</summary>
@@ -184,7 +221,7 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
         <div className="khulani-welcome">
           <span className="khulani-orb" aria-hidden="true" />
           <h3>Ask Khulani about your field</h3>
-          <p>Ask by sensor ID or bed name, or ask about all your sensors.</p>
+          <p>{mode === "gemini" ? "Ask about sample sensors AS-001, AS-002 or AS-003." : "Ask by sensor ID or bed name, or ask about all your sensors."}</p>
         </div>
         <div className="khulani-prompts">
         {prompts.map(prompt => <button type="button" onClick={() => ask(prompt)} key={prompt} disabled={!ready || working}>
@@ -201,7 +238,7 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
           <button type="submit" className="primary khulani-send" aria-label="Send" disabled={!question.trim() || !ready || working}><span aria-hidden="true">↑</span></button>
         </div>
       </form>
-      {(!ready || working || message) && <p role="status">{!ready ? "Loading your farm data…" : working ? "Checking your farm data…" : message}</p>}
+      {(!ready || working || message) && <p role="status">{!ready ? "Loading your farm data…" : working ? (mode === "gemini" ? "Asking Gemini…" : "Checking your farm data…") : message}</p>}
       <p className="monitor-note">Use voice for English dictation. Your browser may process speech online. Typed prompts work offline after the app loads.</p>
     </section>
   </div>;
