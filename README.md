@@ -126,3 +126,7 @@ The floating button opens sensor read-aloud, agricultural support and accessibil
 The support page at /support lists district offices for Limpopo and Mpumalanga and links to national agricultural resources. The bundled directory is available offline and external websites need internet. Call the district office to locate the extension officer for your farm area.
 
 Accessibility mode increases the base text size, strengthens contrast and disables the button's introductory pulse. The preference is saved on the device. The pulse also respects the operating system's reduced-motion preference.
+
+## Deploy on Vercel
+
+Add VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID and VITE_FIREBASE_APP_ID to the Vercel project's Production environment using your Firebase Web app values. Redeploy after saving the variables. Add the production hostname in Firebase Authentication under Settings → Authorized domains for Google sign-in. The Vercel rewrites serve the app on direct links to signup, sign-in, the demo and support.
