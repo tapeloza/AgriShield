@@ -220,7 +220,7 @@ main { padding-block: clamp(1.1rem, 3vw, 2.25rem) .85rem; }
 .header-single .header-actions { flex: 0 0 auto; }
 .language-control span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .mobile-nav-toggle, .workspace-menu { display: none; }
-@media (max-width: 61rem) {
+@media (max-width: 69rem) {
   .header-single .desktop-nav { display: none; }
   .mobile-nav-toggle { display: grid; place-items: center; width: 2.75rem; padding: 0; font-size: 1.1rem; }
   .workspace-menu:popover-open { display: block; position: fixed; margin: 0; inset: 4rem 1rem auto auto; padding: .5rem; width: min(18rem, calc(100% - 2rem)); border: 1px solid #d8e4d9; border-radius: .95rem; background: #fff; box-shadow: 0 12px 34px #0e241d26; }
@@ -347,6 +347,15 @@ textarea { box-sizing: border-box; width: 100%; font: inherit; color: inherit; b
 .khulani-composer button { flex: none; min-height: 44px; padding: .4rem .6rem; border-radius: 1.4rem; }
 .khulani-composer .khulani-send { min-width: 44px; font-size: 1.2rem; }
 .khulani-form label { display: block; margin-bottom: .3rem; font-size: .86rem; }
-.quick-panel .khulani-launch { background: #143d2d; color: #fff; }
+.header-actions .khulani-launch { background: #143d2d; color: #fff; white-space: nowrap; padding-inline: .65rem; }
+@media (max-width: 30rem) {
+  .header-single .brand-wordmark { flex: 0 1 clamp(4rem, 20vw, 7rem); min-width: 3.5rem; }
+  .header-single .khulani-launch { font-size: .8rem; padding-inline: .45rem; }
+}
+@media (max-width: 23rem) {
+  .header-single { width: calc(100% - 1rem); gap: .25rem; }
+  .header-single .header-actions { gap: .2rem; }
+  .header-single .language-control select { width: 3.65rem; }
+}
 .alert-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); }
 .alert-list li { margin-block: .55rem; }

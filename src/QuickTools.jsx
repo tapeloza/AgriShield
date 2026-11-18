@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLanguage } from './Language.jsx';
-import Khulani from './Khulani.jsx';
 import voiceIndex from './sensor-voice.json';
 
 const preference = 'agrishield.accessibility';
 
-export default function QuickTools({ speech, speechClips, demo, workspaceKey }) {
+export default function QuickTools({ speech, speechClips, demo }) {
   const { t } = useLanguage();
   const [mode, setMode] = useState(() => {
     try { return localStorage.getItem(preference) === 'on'; } catch { return false; }
@@ -15,8 +14,6 @@ export default function QuickTools({ speech, speechClips, demo, workspaceKey }) 
   const audio = useRef(null);
   const playback = useRef([]);
   const request = useRef(0);
-  const khulani = useRef(null);
-  const quickTrigger = useRef(null);
 
   useEffect(() => {
     document.documentElement.classList.toggle('reading-mode', mode);
@@ -88,15 +85,11 @@ export default function QuickTools({ speech, speechClips, demo, workspaceKey }) 
   }
 
   return <>
-    <button type="button" className="quick-trigger" ref={quickTrigger} popoverTarget="quick-tools">
+    <button type="button" className="quick-trigger" popoverTarget="quick-tools">
       <span aria-hidden="true">✦</span> {t('Quick tools')}
     </button>
     <section id="quick-tools" className="quick-panel" popover="auto" aria-labelledby="quick-heading">
       <h2 id="quick-heading">{t('Quick tools')}</h2>
-      <button type="button" className="khulani-launch" onClick={event => {
-        event.currentTarget.closest('section').hidePopover();
-        khulani.current.showModal();
-      }}>Khulani AI</button>
       <button type="button" onClick={speak}>{t(speaking ? 'Stop reading' : 'Read sensor data aloud')}</button>
       <a className="button" href={demo ? '/support?from=demo' : '/support'}>{t('Get support')}</a>
       <button type="button" aria-pressed={mode} onClick={() => setMode(value => !value)}>
@@ -106,6 +99,5 @@ export default function QuickTools({ speech, speechClips, demo, workspaceKey }) 
       <div role="status">{message}</div>
       {speech && <details><summary>Reading transcript</summary><p lang="en-ZA">{speech}</p></details>}
     </section>
-    <Khulani key={workspaceKey} workspaceKey={workspaceKey} dialogRef={khulani} onClose={() => quickTrigger.current?.focus()} />
   </>;
 }

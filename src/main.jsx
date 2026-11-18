@@ -15,6 +15,7 @@ import Publications from './Publications.jsx';
 import NewsFeed from './NewsFeed.jsx';
 import { saveCloudReading, saveCloudSensor, saveSampleReadings, saveSpecialistRole, watchReadings, watchRole, watchSensors } from './cloud.js';
 import QuickTools from './QuickTools.jsx';
+import Khulani from './Khulani.jsx';
 import Alerts from './Alerts.jsx';
 import Support from './Support.jsx';
 import FarmOnboarding from './FarmOnboarding.jsx';
@@ -120,6 +121,8 @@ function App({ user, ready }) {
   const [sampleBusy, setSampleBusy] = useState(false);
   const [sensorSync, setSensorSync] = useState('');
   const syncAttempts = useRef(new Set());
+  const khulaniDialog = useRef(null);
+  const khulaniTrigger = useRef(null);
   const [state, setState] = useState(demo ? initial : newFarm);
   const [loaded, setLoaded] = useState(false);
   const [storage, setStorage] = useState('');
@@ -409,6 +412,8 @@ function App({ user, ready }) {
         <div className="header-actions">
           {workspace && <button type="button" className="mobile-nav-toggle" popoverTarget="workspace-navigation"
             aria-label={t('Menu')} title={t('Menu')}>☰</button>}
+          <button type="button" className="khulani-launch" ref={khulaniTrigger} aria-haspopup="dialog"
+            onClick={() => khulaniDialog.current.showModal()}>Khulani AI</button>
           <LanguageSelect />
           {workspace && <ProfileMenu user={user} demo={demo} auth={auth}
             onAccount={() => setView('account')} onTeam={() => setView('team')} />}
@@ -591,7 +596,9 @@ function App({ user, ready }) {
       {workspace && loaded && needsDetails && role === 'grower' && !state.onboardingDismissed && user && !demo &&
         <FarmOnboarding uid={user.uid} onClose={closeOnboarding} />}
     </main>
-    <QuickTools speech={speech} speechClips={speechClips} demo={demo} workspaceKey={workspace ? farmKey : 'public'} />
+    <QuickTools speech={speech} speechClips={speechClips} demo={demo} />
+    <Khulani key={workspace ? farmKey : 'public'} workspaceKey={workspace ? farmKey : 'public'}
+      dialogRef={khulaniDialog} onClose={() => khulaniTrigger.current?.focus()} />
     {import.meta.env.PROD && <footer className="wrap footer"><span role="status">{t(offline)}</span></footer>}
   </>;
 }

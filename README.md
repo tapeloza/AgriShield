@@ -171,7 +171,7 @@ IKS Specialists can publish a draft with a source and recorded knowledge-holder 
 
 ## Khulani AI sample assistant
 
-Open **Quick tools → Khulani AI** on the dashboard or in Guest demo. Choose a sample bed and ask about irrigation, soil moisture, weather or the Local Guide. Cabbage demonstrates a falling reading, tomatoes demonstrate likely rain, and morogo demonstrates a missing reading. The local question classifier and source-based answers run without a server or API key after the PWA is cached. English read-aloud requires an English voice installed on the device. The assistant uses shareable sample entries, and pending community IKS content stays out of its answers.
+Open **Khulani AI** in the top navigation. Choose a sample bed and ask about irrigation, soil moisture, weather or the Local Guide. Cabbage demonstrates a falling reading, tomatoes demonstrate likely rain, and morogo demonstrates a missing reading. The local question classifier and source-based answers run without a server or API key after the PWA is cached. English read-aloud requires an English voice installed on the device. The assistant uses shareable sample entries, and pending community IKS content stays out of its answers.
 
 Use **Use voice** to dictate an English prompt in a supported browser. Review the transcript and select **Send**. The browser may need microphone permission and an internet connection for dictation. Chat history is stored locally per workspace and can be removed with **Clear chat**.
 
