@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from './Language.jsx';
 import QRCode from 'qrcode';
 import { sensorPath, validSensorId } from './sensors.js';
 
 const empty = { id: '', plot: '', bed: '', landmark: '' };
 
 export default function SensorRegister({ sensors, sensor, lastSeen, missing, disabled, onSelect, onSave }) {
+  const { t } = useLanguage();
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(empty);
   const [error, setError] = useState('');
   const [qr, setQr] = useState('');
-  const path = sensorPath(location.pathname === '/demo' ? '/demo' : '/', sensor.id);
+  const path = sensor ? sensorPath(location.pathname === '/demo' ? '/demo' : '/', sensor.id) : '';
   const url = location.origin + path;
 
   useEffect(() => {
+    if (!path) return;
     let active = true;
     QRCode.toDataURL(url, { width: 224, margin: 4 }).then(result => {
       if (active) setQr(result);
@@ -20,7 +23,7 @@ export default function SensorRegister({ sensors, sensor, lastSeen, missing, dis
       if (active) setQr('');
     });
     return () => { active = false; };
-  }, [url]);
+  }, [path, url]);
 
   function open(item) {
     setEditing(item ? 'edit' : 'add');
@@ -30,6 +33,7 @@ export default function SensorRegister({ sensors, sensor, lastSeen, missing, dis
 
   function save(event) {
     event.preventDefault();
+    if (disabled) return;
     const id = form.id.trim().toUpperCase();
     if (!validSensorId.test(id)) {
       setError('Use 2–32 letters, numbers or hyphens for the device ID.');
@@ -50,21 +54,23 @@ export default function SensorRegister({ sensors, sensor, lastSeen, missing, dis
   }
 
   return <section className="card sensor-register" aria-labelledby="sensor-register-heading">
-    <h2 id="sensor-register-heading">Field sensors</h2>
+    <h2 id="sensor-register-heading">{t("Field sensors")}</h2>
     {missing && <p className="monitor-note" role="status">Sensor {missing} has no location in this workspace. Register it to track readings.</p>}
     <fieldset disabled={disabled}>
-      <label htmlFor="field-sensor">Sensor location</label>
-      <select id="field-sensor" value={sensor.id} onChange={event => {
-        setEditing(null);
-        onSelect(event.target.value);
-      }}>
-        {sensors.map(item => <option key={item.id} value={item.id}>{item.plot} · {item.bed} · {item.id}</option>)}
-      </select>
-      <p className="monitor-note"><strong>{sensor.id}</strong>{sensor.landmark && ' · ' + sensor.landmark}</p>
-      <p>{lastSeen ? 'Last recorded · ' + lastSeen : 'No readings recorded for this sensor.'}</p>
+      {sensor ? <>
+        <label htmlFor="field-sensor">{t("Sensor location")}</label>
+        <select id="field-sensor" value={sensor.id} onChange={event => {
+          setEditing(null);
+          onSelect(event.target.value);
+        }}>
+          {sensors.map(item => <option key={item.id} value={item.id}>{item.plot} · {item.bed} · {item.id}</option>)}
+        </select>
+        <p className="monitor-note"><strong>{sensor.id}</strong>{sensor.landmark && ' · ' + sensor.landmark}</p>
+        <p>{lastSeen ? 'Last recorded · ' + lastSeen : 'No readings recorded for this sensor.'}</p>
+      </> : <p>No sensors registered. Add the ID printed on your first device.</p>}
       <div className="account-links sensor-actions">
-        <button type="button" onClick={() => open(null)}>Register sensor</button>
-        <button type="button" onClick={() => open(sensor)}>Edit location</button>
+        <button type="button" onClick={() => open(null)}>{t("Register sensor")}</button>
+        {sensor && <button type="button" onClick={() => open(sensor)}>{t("Edit location")}</button>}
       </div>
     </fieldset>
     {editing && <form onSubmit={save} className="sensor-form">
@@ -75,23 +81,23 @@ export default function SensorRegister({ sensors, sensor, lastSeen, missing, dis
         { name: 'bed', label: 'Bed or zone', max: 80 },
         { name: 'landmark', label: 'Landmark (optional)', max: 120 },
       ].map(({ name, label, max }) => <div key={name}>
-        <label htmlFor={'register-' + name}>{label}</label>
+        <label htmlFor={'register-' + name}>{t(label)}</label>
         <input id={'register-' + name} value={form[name]} maxLength={max}
           required={name !== 'landmark'} readOnly={name === 'id' && editing === 'edit'}
           onChange={event => setForm(old => ({ ...old, [name]: event.target.value }))} />
       </div>)}
       {error && <p className="feedback" role="alert">{error}</p>}
       <div className="account-links sensor-actions">
-        <button className="primary">Save sensor</button>
-        <button type="button" onClick={() => setEditing(null)}>Cancel</button>
+        <button className="primary" disabled={disabled}>{t("Save sensor")}</button>
+        <button type="button" onClick={() => setEditing(null)}>{t("Cancel")}</button>
       </div>
     </form>}
-    <details key={url}>
+    {sensor && <details key={url}>
       <summary>QR label for {sensor.id}</summary>
       <p>Print the QR and ID on the enclosure. Scan it with your phone camera.</p>
       {qr && <img className="sensor-qr" src={qr} width="160" height="160" alt={'QR label for sensor ' + sensor.id} />}
       <a href={path}>Open sensor link</a>
       <p className="monitor-note">For field use, generate this label from the hosted app address.</p>
-    </details>
+    </details>}
   </section>;
 }

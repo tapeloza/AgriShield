@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,png,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,png,jpg,webp,webmanifest}'],
         navigateFallbackDenylist: [/^\/api\//],
       },
     })],

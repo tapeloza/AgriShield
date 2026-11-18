@@ -1,6 +1,6 @@
 # AgriShield
 
-AgriSquad's Agri-IKS hackathon prototype for smallholder vegetable growers in Limpopo and Mpumalanga. The English-language app uses React, Vite, Workbox and IndexedDB.
+AgriSquad's Agri-IKS hackathon prototype for smallholder vegetable growers in Limpopo and Mpumalanga. The app uses React, Vite, Workbox and IndexedDB.
 
 ## Run in VS Code on Windows
 
@@ -25,7 +25,7 @@ npm.cmd run preview
 1. Open http://127.0.0.1:4173 in Chrome or Edge. Wait for **Ready offline**, then choose **Explore the offline demo**. Use the browser's install option if offered.
 2. Choose **Morogo**, select **Dry**, and record the reading. Verify that the demo status says **Below demo range**.
 3. Stop the preview server and reload the exact same /demo URL. The dashboard should reopen with Morogo and the recorded reading.
-4. Open **Knowledge library**, search **morogo**, and inspect the provenance and permission labels. Change the scenario and record another reading while offline.
+4. Open **Local Guide**, search **morogo**, and inspect the provenance and permission labels. Change the scenario and record another reading while offline.
 5. On a phone, first serve the contents of **dist** at the root of an HTTPS origin. Open the URL on that phone, wait for **Ready offline**, install or add to the home screen if offered, then enable airplane mode and reopen. A plain HTTP laptop Wi-Fi IP can show the UI but generally cannot install the offline service worker.
 
 Each device and browser origin has its own cache and database. Keep the exact same scheme, address and port for an offline rehearsal. Browser site-data removal clears both. See the [Vite preview guide](https://vite.dev/guide/static-deploy.html) and [browser secure-context rules](https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Secure_Contexts).
@@ -61,12 +61,12 @@ The browser queries the same-origin path **GET /api/moisture?sensor=AS-001**. Vi
 
 Once the board and probe are confirmed, connect the ESP32 and laptop to the same Wi-Fi network. Change **AGRISHIELD_SENSOR_ORIGIN** in **.env.local** to the ESP32's HTTP origin, such as **http://192.168.1.42**, and restart preview. The ESP32 must implement the endpoint above and convert readings using calibration for the actual probe and soil. Firmware and physical validation depend on the board and probe. A static HTTPS deployment supports the offline demo. For live readings on another device, put the same-origin API behind a server that can reach the ESP32 on the local network.
 
-All crop ranges are illustrative. The app does not control irrigation. Library content and interface are English-only. Use Tab, Shift+Tab, and a screen reader to rehearse navigation through the crop controls, live status and library search.
+All crop ranges are illustrative. The app does not control irrigation. Local Guide articles and specialist messages fall back to English. Use Tab, Shift+Tab, and a screen reader to rehearse navigation through the crop controls, live status and library search.
 
 
 ## Enable Firebase sign-in
 
-From the welcome page choose **Create an account** or **Sign in**. Successful verification opens the dashboard. **Account** is available after sign-in and manages the sign-in email and farm profile. **Explore the offline demo** at **/demo** opens a separate guest workspace. Email and password signup or the first Google sign-in creates a Firebase Authentication account. Use **Forgot password?** on the sign-in page to request a reset. The Firebase browser SDK remembers a signed-in account on that browser until sign-out or session invalidation. Sign-up and sign-in require internet. The offline dashboard, library, and readings continue through Workbox and IndexedDB, including in guest mode. Signed-in readings and farm details are stored on this device under the Firebase account ID. Guest data stays in its own workspace. Clearing browser data removes these local records.
+From the welcome page choose **Create an account** or **Sign in**. Successful verification opens the dashboard. **Account** is available after sign-in and manages the sign-in email and farm profile. On first access, the app opens a farm-details dialog. Save the farm name, location and crops, or choose **Do this later**. **Explore the offline demo** at **/demo** opens a separate guest workspace. Email and password signup or the first Google sign-in creates a Firebase Authentication account. Use **Forgot password?** on the sign-in page to request a reset. The Firebase browser SDK remembers a signed-in account on that browser until sign-out or session invalidation. Sign-up and sign-in require internet. The offline dashboard, library, and readings continue through Workbox and IndexedDB, including in guest mode. Signed-in readings and farm details are stored on this device under the Firebase account ID. Guest data stays in its own workspace. Clearing browser data removes these local records.
 
 1. Create a Firebase project and register a Web app. Copy its apiKey, authDomain, projectId, and appId into the corresponding VITE_FIREBASE variables in .env.local. Use the Web app configuration only. Keep service-account keys out of the frontend.
 2. In **Authentication → Sign-in method**, enable **Email/Password**. Create an account on /signup, then test returning sign-in and password reset on /signin.
@@ -90,10 +90,31 @@ The current local endpoint reads soil moisture only. A physical rollout requires
 
 ## Identify sensors in the field
 
-The dashboard starts with AS-001 in North Plot and AS-002 in South Plot. Select a sensor to see its simulation settings, moisture trend and recorded history. Choose **Register sensor** to enter an installed unit's permanent ID, plot, bed and optional landmark. Use **Edit location** when a unit moves. Existing single-sensor demo history is assigned to AS-001.
+The demo workspace starts with AS-001 in North Plot and AS-002 in South Plot. New accounts start with no sensors and zero readings. Go to Sensors to register a device. Select a sensor to see its simulation settings, moisture trend and recorded history. Choose **Register sensor** to enter an installed unit's permanent ID, plot, bed and optional landmark. Use **Edit location** when a unit moves. Existing single-sensor demo history is assigned to AS-001.
 
 Open the sensor's **QR label** from the HTTPS deployment before printing. A QR created on localhost is only usable on the machine serving that address. The printed ID and landmark remain usable without internet. Once the app is cached on the device, a link for a registered sensor opens its workspace location offline. The register is device-local and scoped to the signed-in account or the separate demo workspace. Register the device on each browser that needs access.
 
 The moisture endpoint must return the physical unit's ID in sensorId. AgriShield accepts a reading only when the returned ID matches the selected unit. The mock recognises AS-001 and AS-002. Multiple physical devices require a gateway or API that can route the sensor query to the right unit. Last recorded reports the time a reading was saved in this browser.
 
 For development-only Firebase Auth Emulator testing, use a demo Firebase project and set VITE_FIREBASE_AUTH_EMULATOR_URL to http://127.0.0.1:9099 alongside the four Firebase Web settings. Vite production builds ignore this variable. Live Google and email/password use the Firebase project configured for the deployment.
+
+## Insights and Local Guide
+
+Insights counts registered sensors, saved readings and sensors with readings in the current device workspace. The Local Guide bundles offline field notes with provenance and permission labels. Its weather warning link opens the official South African Weather Service website online.
+
+## Profile and connection status
+
+Open the top-right avatar to reach Account settings or add a team member to the device-local roster. This roster does not send invitations or grant access. The avatar ring is green for online, blue for a weak connection when the browser reports one, and red when offline. Its accessible name and profile menu also show the status in text.
+
+The bundled JPEGs are generated editorial imagery and are included in the offline build. The signup portrait is public/field-hero.jpg and the dashboard panorama is public/farm-panorama.jpg.
+
+Image prompts used to produce the assets:
+
+- Signup portrait. Photoreal editorial hero photograph for a premium AgriTech web app. Portrait 4:5 crop. Southern African smallholder vegetable farm in Limpopo at golden hour, lush ordered rows of broad-leaf cabbage with rich red-brown soil leading into soft distant green hills, understated drip line, a Black South African adult farmer in practical work clothes and sun hat seen in profile on the RIGHT third checking a plant, authentic documentary photography, warm natural light, deep forest greens and muted gold, confident and modern, visual focal point in the upper middle, clear dark foliage at bottom for a text overlay. No text, no logo, no graphical interfaces, no watermarks.
+- Dashboard panorama. Wide landscape editorial photograph for a professional farm-monitoring dashboard banner, 3:1 panoramic desired, close-to-medium view over a smallholder cabbage field in Limpopo at early morning, vivid honest leafy greens, orderly rows and subtle drip irrigation tubing, distant low hills under a warm pale sky, photographic realism, clean composition, quiet left half for a dark overlay and bright field detail on right. No people, no letters, no graphics, no logos or watermark.
+
+## Pilot languages
+
+Use the header selector to switch between English, siSwati, Xitsonga, Tshivenḓa and isiNdebele. The choice is saved on the device. Translations ship with the app and can be selected offline. The pilot covers navigation, sign-up and sign-in labels, dashboard and sensor headings, and common forms. Local Guide articles, some explanations and technical messages remain in English. The pilot wording in src/pilot-translations.txt needs review by fluent speakers before a public rollout.
+
+The header uses the supplied AgriShield logo. On narrow screens, the navigation opens from the header menu button.

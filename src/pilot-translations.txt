@@ -1,0 +1,79 @@
+Language|Lulwimi|Ririmi|Luambo|Ilimi
+Dashboard|Libhodi lekulawula|Bodo yo lawula|Bodo ya ndangulo|Ibhodi lokulawula
+Field dashboard|Libhodi lensimu|Bodo ya nsimu|Bodo ya tsimu|Ibhodi lesimu
+Insights|Lwati lwensimu|Vuxokoxoko bya nsimu|Mafhungo a tsimu|Imininingwana yesimu
+Sensors|Tinzwa|Swipimi|Zwipimi|Iinzwisi
+Local Guide|Umhlahlandlela wendzawo|Nkongomiso wa ndhawu|Gaidi ya fhethu|Umhlahlandlela wendawo
+Account|I-akhawunti|Akhawunti|Akhawunthu|I-akhawundi
+Account settings|Tilungiselelo te-akhawunti|Swiyimiso swa akhawunti|Nzudzanyo dza akhawunthu|Iinlungiselelo ze-akhawundi
+Add a team member|Ngeta lilunga lelicembu|Engetela xirho xa ntlawa|Engedza muraḓo wa tshigwada|Engeza ilunga lesiqhema
+Farm team|Licembu lelipulazi|Ntlawa wa purasi|Tshigwada tsha bulasi|Isiqhema sepulasi
+Team roster|Luhlu lwemalunga|Nxaxamelo wa swirho|Mutevhe wa miraḓo|Irhelo lamalunga
+Full name|Ligama leliphelele|Vito leri heleleke|Dzina ḽo fhelelaho|Igama elipheleleko
+Farm role|Umsebenti wasepulazini|Ntirho epurasini|Mushumo bulasini|Umsebenzi epulasini
+Add to roster|Ngeta eluhlwini|Engetela eka nxaxamelo|Engedza kha mutevhe|Engeza erhlelweni
+Sign in|Ngena|Nghena|Dzhena|Ngena
+Sign out|Phuma|Huma|Bva|Phuma
+Sign in to AgriShield|Ngena ku-AgriShield|Nghena eka AgriShield|Dzhena kha AgriShield|Ngena ku-AgriShield
+Create an account|Dala i-akhawunti|Tumbuluxa akhawunti|Sika akhawunthu|Yenza i-akhawundi
+Create account|Dala i-akhawunti|Tumbuluxa akhawunti|Sika akhawunthu|Yenza i-akhawundi
+Create your account|Dala i-akhawunti yakho|Tumbuluxa akhawunti ya wena|Sika akhawunthu yau|Yenza i-akhawundi yakho
+Email address|Likheli le-imeyili|Adirese ya imeyili|Aḓirese ya imeiḽi|Isiphande se-imeyili
+Password|Liphasiwedi|Phasiwedi|Phasiwede|Iphasiwedi
+Continue with Google|Chubeka nge-Google|Yana mahlweni hi Google|Bvela phanḓa nga Google|Ragela phambili nge-Google
+Forgot password?|Ukhohlwe liphasiwedi?|U rivele phasiwedi?|No hangwa phasiwede?|Ukhohliwe iphasiwedi?
+Reset your password|Setha kabusha liphasiwedi|Pfuxeta phasiwedi ya wena|Vhea phasiwede ntswa|Setha kabutjha iphasiwedi
+Send reset link|Tfumelela isixhumanisi|Rhumeleka xihlanganisi|Rumelani ḽinki|Thumela isixhumanisi
+Back to sign in|Buyela ekungeneni|Tlhelela eku ngheneni|Humbela u dzhena|Buyela ekungeneni
+Back to welcome|Buyela ekucaleni|Tlhelela eku sunguleni|Humbela mathomoni|Buyela ekuthomeni
+Use your email and password or continue with Google.|Sebentisa i-imeyili neliphasiwedi noma uchubeke nge-Google.|Tirhisa imeyili na phasiwedi kumbe u ya mahlweni hi Google.|Shumisani imeiḽi na phasiwede kana ni bvele phanḓa nga Google.|Sebenzisa i-imeyili nephasiwedi nofana uragele phambili nge-Google.
+Manage your farm with AgriShield|Lawula lipulazi lakho nge-AgriShield|Lawula purasi ra wena hi AgriShield|Langulani bulasi ḽaṋu nga AgriShield|Lawula ipulasi lakho nge-AgriShield
+Explore the offline demo|Buka sibonelo ngaphandle kwe-inthanethi|Vona nkombiso handle ka inthanete|Vhonani tsumbo hu si na inthanethe|Qala isibonelo ngaphandle kwe-inthanethi
+Exit demo|Phuma esibonelweni|Huma eka nkombiso|Bvani kha tsumbo|Phuma esibonelweni
+Demo workspace|Indzawo yesibonelo|Ndhawu ya nkombiso|Fhethu ha tsumbo|Indawo yesibonelo
+Farm workspace|Indzawo yelipulazi|Ndhawu ya purasi|Fhethu ha bulasi|Indawo yepulasi
+Online|Kuxhunyiwe|Ri hlanganisiwile|Ho ṱumanywa|Kuxhunyiwe
+Unstable network|Inethiwekhi ayikaciniseki|Netiweke a yi tiyanga|Netiweke a yo ngo khwaṱha|Inethiwekhi ayizinzi
+Offline|Akuxhunyiwe|A ri hlanganisiwanga|A ho ngo ṱumanywa|Akuxhunywanga
+Ready offline|Kulungele kusebenta ngaphandle kwe-inthanethi|Swi lunghekile ku tirha handle ka inthanete|Zwo lugela u shuma hu si na inthanethe|Kulungele ukusebenza ngaphandle kwe-inthanethi
+Registered sensors|Tinzwa letibhalisiwe|Swipimi leswi tsarisiweke|Zwipimi zwo ṅwaliswaho|Iinzwisi ezitlolisiweko
+Saved readings|Tilinganiso letigciniwe|Mipimo leyi hlayisiweke|Mielo yo vhulungwaho|Iimedo ezibulungiweko
+Sensors with readings|Tinzwa letinetilinganiso|Swipimi leswi nga na mipimo|Zwipimi zwi re na mielo|Iinzwisi ezineemeda
+Field sensors|Tinzwa tensimu|Swipimi swa nsimu|Zwipimi zwa tsimu|Iinzwisi zesimu
+Sensor readings|Tilinganiso tetinzwa|Mipimo ya swipimi|Mielo ya zwipimi|Iimedo zeenzwisi
+Sensor location|Indzawo yenzwa|Ndhawu ya xipimi|Fhethu ha tshifhimi|Indawo yesizwisi
+No field sensors yet|Kute tinzwa tensimu okwamanje|A ku na swipimi swa nsimu sweswi|A hu na zwipimi zwa tsimu zwa zwino|Azikho iinzwisi zesimu okwanje
+Go to Sensors|Yana etinzweni|Yana eka Swipimi|Iyani kha Zwipimi|Iya eenzwisini
+Register sensor|Bhalisa inzwa|Tsarisa xipimi|Ṅwalisani tshifhimi|Tlolisa isizwisi
+Edit location|Shintja indzawo|Cinca ndhawu|Shandulani fhethu|Tjhugulula indawo
+Save sensor|Gcina inzwa|Hlayisa xipimi|Vhulungani tshifhimi|Bulunga isizwisi
+Cancel|Khansela|Khansela|Khanselani|Khansela
+Device ID|Inombolo yelithuluzi|Nomboro ya xitirhisiwa|Nomboro ya tshishumiswa|Inomboro yesisetjenziswa
+Plot name|Ligama lensimu|Vito ra nsimu|Dzina ḽa tsimu|Igama lesimu
+Bed or zone|Umbhedze noma indzawo|Bethe kumbe ndhawu|Muvunda kana fhethu|Umbhede nofana indawo
+Moisture|Buswakama bemhlabatsi|Ntsakama wa misava|Munyukelo wa mavu|Ubuswakama behlabathi
+Temperature|Lizinga lekushisa|Mahiselo|Thempheretsha|Izinga lokutjhisa
+Rainfall|Imvula|Mpfula|Mvula|Izulu elinileko
+Crop|Silimo|Xibyariwa|Tshimela|Isitjalo
+All crops|Tatilimo tonkhe|Swibyariwa hinkwato|Zwimela zwoṱhe|Zoke iintjalo
+Tomatoes|Ematamatisi|Matamatisi|Matamatisi|Amatamatisi
+Cabbage|Liklabishi|Khavichi|Khabitshi|Ikhabitjhi
+Recent readings|Tilinganiso takamuva|Mipimo ya sweswinyana|Mielo ya zwenezwino|Iimedo zakamuva
+No moisture readings yet.|Kute tilinganiso tebuswakama okwamanje.|A ku na mipimo ya ntsakama sweswi.|A hu na mielo ya munyukelo zwa zwino.|Azikho iimedo zobuswakama okwanje.
+Weather warnings|Tecwayiso tesimo selitulu|Switsundzuxo swa maxelo|Tsivhudzo dza mutsho|Iinyeleliso zobujamo bezulu
+View official weather warnings|Buka tecwayiso letisemtsetfweni|Vona switsundzuxo swa ximfumo|Vhonani tsivhudzo dza tshiofisi|Qala iinyeleliso ezisemthethweni
+Search the library|Sesha emtapweni|Lavisisa eka layiburari|Ṱoḓani kha laiburari|Funisisa ebulungelweni
+Filter by crop|Hlunga ngesilimo|Hlawula hi xibyariwa|Sefani nga tshimela|Hlunga ngesitjalo
+Permission|Imvume|Mpimanyeto wa mpfumelelo|Thendelo|Imvumo
+Add your business details|Ngeta imininingwane yelibhizinisi|Engetela vuxokoxoko bya bindzu|Engedzani zwidodombedzwa zwa bindu|Engeza imininingwana yebhizinisi
+Farm or business name|Ligama lelipulazi noma lelibhizinisi|Vito ra purasi kumbe bindzu|Dzina ḽa bulasi kana bindu|Igama lepulasi nofana lebhizinisi
+Farm location|Indzawo yelipulazi|Ndhawu ya purasi|Fhethu ha bulasi|Indawo yepulasi
+Crops you produce|Tatilimo lotitjalako|Swibyariwa leswi u swi byalaka|Zwimela zwine na lima|Iintjalo ozitjalako
+Other crops|Letinye tilimo|Swibyariwa swin’wana|Zwiṅwe zwimela|Ezinye iintjalo
+Save farm details|Gcina imininingwane yelipulazi|Hlayisa vuxokoxoko bya purasi|Vhulungani zwidodombedzwa zwa bulasi|Bulunga imininingwana yepulasi
+Do this later|Yenta loku kamuva|Endla leswi endzhaku|Itani hezwi nga murahu|Yenza lokhu ngemva
+Business and crops|Libhizinisi netilimo|Bindzu na swibyariwa|Bindu na zwimela|Ibhizinisi neentjalo
+New email address|Likheli le-imeyili lelisha|Adirese leyintshwa ya imeyili|Aḓirese ntswa ya imeiḽi|Isiphande esitjha se-imeyili
+Menu|Imenyu|Menyu|Menu|Imenyu
+Main navigation|Imenyu lenkhulu|Menyu leyikulu|Menu khulwane|Imenyu ekulu
+Open profile menu|Vula imenyu yephrofayili|Pfula menyu ya phurofayili|Vulani menu ya phurofaiḽi|Vula imenyu yephrofayili

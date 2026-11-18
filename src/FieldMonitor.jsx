@@ -1,17 +1,19 @@
 import React from 'react';
+import { useLanguage } from './Language.jsx';
 import { demoReadings, tankCapacity } from './model.js';
 
 export default function FieldMonitor({ scenario, tank, demand, paused, disabled, onTank, onPause }) {
+  const { t } = useLanguage();
   const { rainfall, nutrients } = demoReadings[scenario];
   const running = demand && !paused && tank > 0;
   const litres = Math.round(tankCapacity * tank / 100).toLocaleString('en-ZA');
 
   return <div className="field-grid">
     <section className="card" aria-labelledby="field-heading">
-      <h2 id="field-heading">Field sensors</h2>
+      <h2 id="field-heading">{t("Field sensors")}</h2>
       <p className="monitor-note">Simulated readings</p>
       <dl className="metrics">
-        <div><dt>Rainfall</dt><dd>{rainfall} mm</dd></div>
+        <div><dt>{t("Rainfall")}</dt><dd>{rainfall} mm</dd></div>
         <div><dt>Soil nutrients (NPK)</dt><dd>{nutrients}</dd></div>
       </dl>
     </section>
@@ -37,6 +39,7 @@ export default function FieldMonitor({ scenario, tank, demand, paused, disabled,
 }
 
 export function MoistureTrend({ history, crop, threshold }) {
+  const { t } = useLanguage();
   const samples = history.filter(item => item.crop === crop && item.source === 'simulation')
     .slice(0, 12).reverse();
   const points = samples.map((item, index) => [

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from './Language.jsx';
 import { initializeApp } from 'firebase/app';
 import {
   connectAuthEmulator, createUserWithEmailAndPassword, getAuth, GoogleAuthProvider,
@@ -45,13 +46,14 @@ const errorMessages = {
 };
 
 export default function Account({ page, user, ready }) {
+  const { t } = useLanguage();
   const signup = page === 'signup';
   const [reset, setReset] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const heading = signup ? 'Create your account' : reset ? 'Reset your password' : 'Sign in to AgriShield';
+  const heading = t(signup ? 'Create your account' : reset ? 'Reset your password' : 'Sign in to AgriShield');
 
   useEffect(() => {
     if (user) location.replace(sensorPath('/'));
@@ -87,40 +89,48 @@ export default function Account({ page, user, ready }) {
     setPassword('');
   }
 
-  return <>
+  return <div className="auth-layout">
+    <aside className="auth-image" aria-label="Vegetable fields">
+      <div>
+        <strong>Know your fields.</strong>
+        <p>Monitor soil conditions and keep your farm records close, even offline.</p>
+      </div>
+    </aside>
+    <div className="auth-panel">
     <h1>{heading}</h1>
-    <p className="intro">{reset ? 'Enter the email address you use for AgriShield.' : 'Use your email and password or continue with Google.'}</p>
-    <section className="card account" aria-label={heading}>
+    <p className="intro">{reset ? 'Enter the email address you use for AgriShield.' : t('Use your email and password or continue with Google.')}</p>
+    <section className="account auth-form" aria-label={heading}>
       {!auth ? <p>Sign-in is unavailable until Firebase is configured.</p>
         : !ready ? <p role="status">Checking your session…</p>
         : user ? <p role="status">Opening your dashboard…</p> : <>
           <form onSubmit={submit}>
             <fieldset disabled={busy}>
-              <label htmlFor="auth-email">Email address</label>
-              <input id="auth-email" type="email" autoComplete="email" required value={email}
+              <label htmlFor="auth-email">{t("Email address")}</label>
+              <input id="auth-email" type="email" autoComplete={reset ? 'email' : 'username'} required value={email}
                 onChange={event => setEmail(event.target.value)} />
               {!reset && <>
-                <label htmlFor="auth-password">Password</label>
+                <label htmlFor="auth-password">{t("Password")}</label>
                 <input id="auth-password" type="password" autoComplete={signup ? 'new-password' : 'current-password'}
                   minLength={signup ? 6 : undefined} required value={password}
                   onChange={event => setPassword(event.target.value)} />
               </>}
-              <button className="primary wide">{reset ? 'Send reset link' : signup ? 'Create account' : 'Sign in'}</button>
+              <button className="primary wide">{t(reset ? 'Send reset link' : signup ? 'Create account' : 'Sign in')}</button>
             </fieldset>
           </form>
           {!reset && <button className="wide" disabled={busy} onClick={() => run(
             () => signInWithPopup(auth, new GoogleAuthProvider()),
             'Could not complete Google sign-in. Try opening AgriShield in Chrome or Edge.',
-          )}>Continue with Google</button>}
+          )}>{t("Continue with Google")}</button>}
           {!signup && <button className="wide" type="button" disabled={busy} onClick={toggleReset}>
-            {reset ? 'Back to sign in' : 'Forgot password?'}
+            {t(reset ? 'Back to sign in' : 'Forgot password?')}
           </button>}
         </>}
       <p className="feedback" role="status">{busy ? 'Working…' : message}</p>
       <div className="account-links">
         {signup && <a href={sensorPath('/signin')}>Already have an account? Sign in</a>}
-        <a href={sensorPath('/')}>Back to welcome</a>
+        <a href={sensorPath('/')}>{t("Back to welcome")}</a>
       </div>
     </section>
-  </>;
+    </div>
+  </div>;
 }
