@@ -43,7 +43,8 @@ export default async function handler(req, res) {
   }
   const token = /^Bearer ([A-Za-z0-9_.-]{1,4096})$/.exec(req.headers.authorization ?? '')?.[1];
   if (!token) return res.status(401).json({ error: 'Sign in to use Gemini sample chat' });
-  const { GEMINI_API_KEY: geminiKey, VITE_FIREBASE_PROJECT_ID: project, VITE_FIREBASE_API_KEY: firebaseKey } = process.env;
+  const { VITE_FIREBASE_PROJECT_ID: project, VITE_FIREBASE_API_KEY: firebaseKey } = process.env;
+  const geminiKey = process.env.GEMINI_API_KEY?.trim() || process.env.Gemini_API_Key?.trim();
   if (!geminiKey || !project || !firebaseKey) return res.status(503).json({ error: 'Gemini sample chat is unavailable' });
 
   const question = typeof req.body?.question === 'string' ? req.body.question.trim() : '';
