@@ -318,3 +318,16 @@ textarea { box-sizing: border-box; width: 100%; font: inherit; color: inherit; b
   .analytics-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .analytics-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.khulani-dialog { width: min(37rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); padding: 0; background: #fff; color: #173729; border: 1px solid #819889; border-radius: 1rem; }
+.khulani-dialog::backdrop { background: #102b22ad; }
+.khulani-header { display: flex; justify-content: space-between; align-items: center; gap: .7rem; padding: 1rem; background: #143d2d; color: #fff; }
+.khulani-header h2, .khulani-header p, .khulani-body > p, .khulani-answer h3 { margin: 0; }
+.khulani-header p { color: #e0edc8; }
+.khulani-body, .khulani-form { display: grid; gap: .65rem; }
+.khulani-body { padding: 1rem; }
+.khulani-prompts { display: flex; flex-wrap: wrap; gap: .45rem; }
+.khulani-prompts button { font-size: .92rem; }
+.khulani-answer { border-left: .25rem solid #648841; padding: .75rem 1rem; background: #f1f5e9; }
+.khulani-answer li { overflow-wrap: anywhere; }
+.quick-panel .khulani-launch { background: #143d2d; color: #fff; }
