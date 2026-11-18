@@ -17,5 +17,5 @@ async function transaction(mode, operation) {
   });
 }
 
-export const loadState = () => transaction('readonly', store => store.get('demo'));
-export const saveState = state => transaction('readwrite', store => store.put(state, 'demo'));
+export const loadState = key => transaction('readonly', store => store.get(key));
+export const saveState = (key, state) => transaction('readwrite', store => store.put(state, key));
