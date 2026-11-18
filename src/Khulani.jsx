@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { answerQuestion, beds, prompts } from './khulani.js';
+import { answerQuestion, prompts } from './khulani.js';
+import { loadState } from './db.js';
+import { watchPublications } from './cloud.js';
 
 function readHistory(key) {
   try {
@@ -10,17 +12,19 @@ function readHistory(key) {
   }
 }
 
-export default function Khulani({ workspaceKey }) {
+export default function Khulani({ workspaceKey, sensors, readings, ready, auth }) {
   const storageKey = 'agrishield.khulani:' + workspaceKey;
   const [history, setHistory] = useState(() => readHistory(storageKey));
-  const [bed, setBed] = useState(() => history.at(-1)?.bed ?? 'cabbage');
   const [question, setQuestion] = useState('');
   const [listening, setListening] = useState(false);
   const [message, setMessage] = useState('');
   const recognition = useRef(null);
   const transcript = useRef(null);
   const heading = useRef(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [publications, setPublications] = useState([]);
+  const pending = useRef(false);
+  const cancelled = useRef(false);
+  const [working, setWorking] = useState(false);
   const input = useRef(null);
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -31,7 +35,12 @@ export default function Khulani({ workspaceKey }) {
 
   useEffect(scrollChat, [history]);
   useEffect(() => { heading.current?.focus(); }, []);
+  useEffect(() => {
+    if (!auth) return;
+    return watchPublications(auth, null, setPublications, () => setPublications([]));
+  }, [auth]);
   useEffect(() => () => {
+    cancelled.current = true;
     const active = recognition.current;
     recognition.current = null;
     active?.abort();
@@ -45,12 +54,23 @@ export default function Khulani({ workspaceKey }) {
     setListening(false);
   }
 
-  function ask(value) {
+  async function ask(value) {
     const text = value.trim();
-    if (!text) return;
+    if (!text || !ready || pending.current) return;
     stopListening();
     window.speechSynthesis?.cancel();
-    const entry = { id: crypto.randomUUID(), bed, question: text, answer: answerQuestion(beds[bed], text) };
+    pending.current = true;
+    setWorking(true);
+    const saved = await loadState('weather:' + workspaceKey).catch(() => null);
+    if (cancelled.current) return;
+    const location = saved?.location;
+    const point = Number.isFinite(location?.lat) && Number.isFinite(location?.lng)
+      ? location.lat.toFixed(4) + ',' + location.lng.toFixed(4) : null;
+    const weather = point && saved?.forecast?.point === point ? saved : null;
+    const entry = { id: crypto.randomUUID(), question: text,
+      answer: answerQuestion(text, { sensors, readings, weather, publications }) };
+    pending.current = false;
+    setWorking(false);
     const next = [...history, entry];
     setHistory(next);
     setQuestion('');
@@ -140,39 +160,17 @@ export default function Khulani({ workspaceKey }) {
   }
 
   return <div className="khulani-page">
-    <button type="button" className="khulani-sidebar-toggle" aria-expanded={sidebarOpen} aria-controls="khulani-sidebar"
-      onClick={() => setSidebarOpen(open => !open)}>{sidebarOpen ? 'Hide chat menu' : 'Show chat menu'}</button>
-    <aside id="khulani-sidebar" className="khulani-sidebar" data-open={sidebarOpen} aria-label="Khulani chat menu">
-      <div className="khulani-controls">
-        <div><label htmlFor="khulani-bed">Sample bed</label>
-          <select id="khulani-bed" value={bed} onChange={event => setBed(event.target.value)}>
-            {Object.entries(beds).map(([id, item]) => <option key={id} value={id}>{item.name}</option>)}
-          </select>
-        </div>
-        {history.length > 0 && <button type="button" onClick={clearChat}>Clear chat</button>}
-      </div>
-      {history.length > 0 && <nav aria-label="Previous questions">
-        <h2>Previous questions</h2>
-        <ul>{[...history].reverse().map(entry => <li key={entry.id}>
-          <button type="button" onClick={() => {
-            const turn = document.getElementById('khulani-turn-' + entry.id);
-            setSidebarOpen(false);
-            turn?.focus();
-            turn?.scrollIntoView({ block: 'nearest' });
-          }}>{entry.question}</button>
-        </li>)}</ul>
-      </nav>}
-    </aside>
     <section className="khulani-body" aria-labelledby="khulani-title">
       <header className="khulani-header">
         <h1 id="khulani-title" ref={heading} tabIndex={-1}>Khulani AI</h1>
-        <p>Sample farm · Chat history stays on this device</p>
+        <p>Chat history stays on this device.</p>
+        {history.length > 0 && <button type="button" className="khulani-clear" disabled={working} onClick={clearChat}>Clear chat</button>}
       </header>
       <section hidden={history.length === 0} className="khulani-transcript" ref={transcript} role="log" aria-label="Chat history" tabIndex={0}>
         {history.map(entry => <article className="khulani-turn" key={entry.id} id={'khulani-turn-' + entry.id} tabIndex={-1}>
-          <p className="khulani-question"><strong>You · {beds[entry.bed]?.name}</strong><br />{entry.question}</p>
+          <p className="khulani-question"><strong>You</strong><br />{entry.question}</p>
           <div className="khulani-answer">
-            <h3>Khulani</h3>
+            <h3>Khulani{entry.bed ? ' · Earlier sample answer' : ''}</h3>
             <p>{entry.answer.text}</p>
             {entry.answer.sources.length > 0 && <details>
               <summary>Sources and permissions</summary>
@@ -186,10 +184,10 @@ export default function Khulani({ workspaceKey }) {
         <div className="khulani-welcome">
           <span className="khulani-orb" aria-hidden="true" />
           <h3>Ask Khulani about your field</h3>
-          <p>Explore soil readings, rain and the Local Guide.</p>
+          <p>Ask by sensor ID or bed name, or ask about all your sensors.</p>
         </div>
         <div className="khulani-prompts">
-        {prompts.map(prompt => <button type="button" onClick={() => ask(prompt)} key={prompt}>
+        {prompts.map(prompt => <button type="button" onClick={() => ask(prompt)} key={prompt} disabled={!ready || working}>
             {prompt}<span aria-hidden="true">↗</span>
           </button>)}
         </div>
@@ -200,10 +198,10 @@ export default function Khulani({ workspaceKey }) {
           <input ref={input} id="khulani-question" value={question} maxLength={240} placeholder="Ask about your field…"
             onChange={event => setQuestion(event.target.value)} />
           <button type="button" aria-pressed={listening} aria-label={listening ? "Stop listening" : "Use voice"} onClick={dictate}>{listening ? 'Stop' : 'Voice'}</button>
-          <button type="submit" className="primary khulani-send" aria-label="Send" disabled={!question.trim()}><span aria-hidden="true">↑</span></button>
+          <button type="submit" className="primary khulani-send" aria-label="Send" disabled={!question.trim() || !ready || working}><span aria-hidden="true">↑</span></button>
         </div>
       </form>
-      {message && <p role="status">{message}</p>}
+      {(!ready || working || message) && <p role="status">{!ready ? "Loading your farm data…" : working ? "Checking your farm data…" : message}</p>}
       <p className="monitor-note">Use voice for English dictation. Your browser may process speech online. Typed prompts work offline after the app loads.</p>
     </section>
   </div>;

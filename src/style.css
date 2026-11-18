@@ -326,27 +326,13 @@ textarea { box-sizing: border-box; width: 100%; font: inherit; color: inherit; b
 @media (prefers-reduced-motion: reduce) { .brand-loader-transition { display: none; } }
 
 .khulani-main { min-height: calc(100dvh - 5rem); background: #fafcf8; }
-.khulani-page { min-height: inherit; display: grid; grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr); }
-.khulani-sidebar { padding: 1.1rem; background: #eef3e9; border-right: 1px solid #dbe5d8; min-width: 0; }
-.khulani-sidebar-toggle { display: none; }
-.khulani-sidebar h2 { font-size: .92rem; margin-top: 1.4rem; }
-.khulani-sidebar ul { display: grid; gap: .3rem; list-style: none; padding: 0; max-height: 52dvh; overflow: auto; }
-.khulani-sidebar li button { width: 100%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.khulani-page { min-height: inherit; }
 .khulani-header { margin-bottom: .5rem; }
 .khulani-header h1 { font-size: 1.45rem; }
 .khulani-header h1, .khulani-header p, .khulani-body > p, .khulani-answer h3 { margin: 0; }
 .khulani-header p, .khulani-body .monitor-note { color: #456252; font-size: .84rem; }
 .khulani-body { width: min(100%, 54rem); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: .85rem; padding: clamp(1rem, 4vw, 2.5rem); }
-.khulani-controls { display: grid; gap: .6rem; }
-.khulani-controls label { display: block; font-size: .8rem; color: #456252; }
-.khulani-controls select { width: 100%; border-radius: .85rem; }
-@media (max-width: 44rem) {
-  .khulani-page { grid-template-columns: minmax(0, 1fr); align-content: start; }
-  .khulani-sidebar-toggle { display: inline-block; justify-self: start; margin: .75rem 1rem 0; }
-  .khulani-sidebar { display: none; margin: .65rem 1rem 0; border: 1px solid #dbe5d8; border-radius: .8rem; }
-  .khulani-sidebar[data-open="true"] { display: block; }
-  .khulani-sidebar ul { max-height: 24dvh; }
-}
+.khulani-clear { margin-top: .55rem; }
 .khulani-welcome { text-align: center; padding: clamp(.5rem, 3dvh, 1.5rem) .5rem; }
 .khulani-welcome h3 { margin: .8rem 0 .25rem; font-size: clamp(1.25rem, 4vw, 1.75rem); }
 .khulani-welcome p { margin: 0; color: #456252; }
@@ -358,6 +344,7 @@ textarea { box-sizing: border-box; width: 100%; font: inherit; color: inherit; b
 .khulani-turn { margin-block: .5rem 1rem; }
 .khulani-question { width: fit-content; max-width: 90%; margin-left: auto; padding: .65rem .85rem; border-radius: 1rem 1rem .3rem 1rem; background: #dcebd3; overflow-wrap: anywhere; }
 .khulani-answer { padding: .8rem 1rem; background: #fff; border: 1px solid #dbe5d8; border-radius: .35rem 1rem 1rem; }
+.khulani-answer p { white-space: pre-line; }
 .khulani-answer li { overflow-wrap: anywhere; }
 .khulani-composer { display: flex; gap: .35rem; align-items: center; padding: .35rem; background: #fff; border: 1px solid #a7bcae; border-radius: 1.7rem; }
 .khulani-composer input { min-width: 0; flex: 1 1 0; width: 0; border: 0; border-radius: 1.4rem; background: transparent; padding-inline: .65rem .3rem; }

@@ -171,7 +171,7 @@ IKS Specialists can publish a draft with a source and recorded knowledge-holder 
 
 ## Khulani AI sample assistant
 
-Open **Khulani AI** in the top navigation. Choose a sample bed and ask about irrigation, soil moisture, weather or the Local Guide. Cabbage demonstrates a falling reading, tomatoes demonstrate likely rain, and morogo demonstrates a missing reading. The local question classifier and source-based answers run without a server or API key after the PWA is cached. English read-aloud requires an English voice installed on the device. The assistant uses shareable sample entries, and pending community IKS content stays out of its answers.
+Sign in and open **Khulani AI** in the top navigation. Ask for a sensor by its ID or bed name, list the farm’s sensors, or ask about the latest readings. Khulani uses the signed-in workspace’s registered sensors, saved readings, forecast saved by Weather & Map, and permission-granted Local Guide material. It labels simulations and mock readings. The current farm sensor record stores soil moisture.
 
 Use **Use voice** to dictate an English prompt in a supported browser. Review the transcript and select **Send**. The browser may need microphone permission and an internet connection for dictation. Chat history is stored locally per workspace and can be removed with **Clear chat**.
 

@@ -57,7 +57,7 @@ function Root() {
     });
   }, []);
 
-  if (!ready && !demo && !supportPage && !publicGuide && !publicAlerts && location.hash !== '#khulani') return <BrandLoader pending />;
+  if (!ready && !demo && !supportPage && !publicGuide && !publicAlerts) return <BrandLoader pending />;
   return <App key={authPage ?? user?.uid ?? 'guest'} user={user} ready={ready} />;
 }
 
@@ -127,7 +127,9 @@ function App({ user, ready }) {
   const [loaded, setLoaded] = useState(false);
   const [storage, setStorage] = useState('');
   const [offline, setOffline] = useState(import.meta.env.PROD ? 'Preparing offline access…' : 'Offline cache available in production preview');
-  const [khulaniOpen, setKhulaniOpen] = useState(() => location.hash === '#khulani');
+  const [khulaniRoute, setKhulaniRoute] = useState(() => location.hash === '#khulani');
+  const canUseKhulani = Boolean(user && workspace && !demo);
+  const khulaniOpen = canUseKhulani && khulaniRoute;
   const [view, updateView] = useState(publicAlerts ? 'alerts' : publicGuide ? 'library' : 'dashboard');
   const [weatherReturn, setWeatherReturn] = useState('library');
   const [query, setQuery] = useState('');
@@ -138,7 +140,7 @@ function App({ user, ready }) {
   const [needsDetails, setNeedsDetails] = useState(false);
 
   useEffect(() => {
-    const syncLocation = () => setKhulaniOpen(location.hash === '#khulani');
+    const syncLocation = () => setKhulaniRoute(location.hash === '#khulani');
     window.addEventListener('hashchange', syncLocation);
     return () => window.removeEventListener('hashchange', syncLocation);
   }, []);
@@ -146,7 +148,7 @@ function App({ user, ready }) {
   function setView(next) {
     if (location.hash === '#khulani') {
       window.history.replaceState(window.history.state, '', location.pathname + location.search);
-      setKhulaniOpen(false);
+      setKhulaniRoute(false);
     }
     updateView(next);
   }
@@ -427,7 +429,7 @@ function App({ user, ready }) {
         <div className="header-actions">
           {workspace && <button type="button" className="mobile-nav-toggle" popoverTarget="workspace-navigation"
             aria-label={t('Menu')} title={t('Menu')}>☰</button>}
-          <a className="khulani-launch" href="#khulani" aria-current={khulaniOpen ? "page" : undefined}>Khulani AI</a>
+          {canUseKhulani && <a className="khulani-launch" href="#khulani" aria-current={khulaniOpen ? "page" : undefined}>Khulani AI</a>}
           <LanguageSelect />
           {workspace && <ProfileMenu user={user} demo={demo} auth={auth}
             onAccount={() => setView('account')} onTeam={() => setView('team')} />}
@@ -443,7 +445,8 @@ function App({ user, ready }) {
     <BrandLoader key={khulaniOpen ? 'khulani' : view} />
     <main id="main" className={khulaniOpen ? 'khulani-main' : 'wrap' + (authPage ? ' auth-main' : '')} tabIndex={-1}>
       {storage && <p className="notice" role="status">{storage}</p>}
-      {khulaniOpen ? <Khulani key={workspace ? farmKey : 'public'} workspaceKey={workspace ? farmKey : 'public'} />
+      {khulaniOpen ? <Khulani key={farmKey} workspaceKey={farmKey} sensors={state.sensors} readings={history}
+        ready={loaded} auth={auth} />
         : supportPage ? <Support /> : authPage ? <Account page={authPage} user={user} ready={ready} />
         : !workspace && !publicGuide && !publicAlerts ? <section className="welcome welcome-hero">
           <h1>{t("Manage your farm with AgriShield")}</h1>
