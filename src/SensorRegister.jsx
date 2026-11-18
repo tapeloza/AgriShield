@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useLanguage } from './Language.jsx';
 import QRCode from 'qrcode';
 import { sensorPath, validSensorId } from './sensors.js';
+import { googleEmbedUrl } from './sensorMaps.js';
 
-const empty = { id: '', plot: '', bed: '', landmark: '' };
+const empty = { id: '', plot: '', bed: '', landmark: '', mapEmbed: '' };
 
 export default function SensorRegister({ sensors, sensor, latest, lastSeen, missing, disabled, onSelect, onSave }) {
   const { t } = useLanguage();
@@ -27,7 +28,7 @@ export default function SensorRegister({ sensors, sensor, latest, lastSeen, miss
 
   function open(item) {
     setEditing(item ? 'edit' : 'add');
-    setForm(item ?? { ...empty, id: missing || '' });
+    setForm(item ? { ...empty, ...item } : { ...empty, id: missing || '' });
     setError('');
   }
 
@@ -49,7 +50,12 @@ export default function SensorRegister({ sensors, sensor, latest, lastSeen, miss
       setError('Enter both the plot and bed.');
       return;
     }
-    onSave({ id, plot, bed, landmark: form.landmark.trim() });
+    const mapEmbed = googleEmbedUrl(form.mapEmbed);
+    if (form.mapEmbed.trim() && (!mapEmbed || mapEmbed.length > 2048)) {
+      setError('Copy the Google Maps HTML from Share → Embed a map, or paste its embed URL.');
+      return;
+    }
+    onSave({ id, plot, bed, landmark: form.landmark.trim(), mapEmbed });
     setEditing(null);
   }
 
@@ -87,6 +93,11 @@ export default function SensorRegister({ sensors, sensor, latest, lastSeen, miss
           required={name !== 'landmark'} readOnly={name === 'id' && editing === 'edit'}
           onChange={event => setForm(old => ({ ...old, [name]: event.target.value }))} />
       </div>)}
+      <label htmlFor="register-map">Google Maps embed (optional)</label>
+      <textarea id="register-map" rows={2} maxLength={4096} value={form.mapEmbed}
+        onChange={event => setForm(old => ({ ...old, mapEmbed: event.target.value }))}
+        aria-describedby="register-map-help" />
+      <p id="register-map-help" className="monitor-note">In Google Maps, place the pin, then choose Share → Embed a map → Copy HTML. Paste it here.</p>
       {error && <p className="feedback" role="alert">{error}</p>}
       <div className="account-links sensor-actions">
         <button className="primary" disabled={disabled}>{t("Save sensor")}</button>

@@ -289,3 +289,9 @@ textarea { box-sizing: border-box; width: 100%; font: inherit; color: inherit; b
 .forecast-list small { display: block; color: #405b4b; }
 .forecast-values { text-align: right; }
 @media (min-width: 48rem) { .weather-layout { grid-template-columns: 1.15fr 1fr; } }
+
+.sensor-map-card { margin-bottom: 1rem; }
+.sensor-map-heading { display: flex; align-items: center; justify-content: space-between; gap: .5rem 1rem; flex-wrap: wrap; }
+.sensor-map-heading p { margin-top: .3rem; font-size: .92rem; }
+.sensor-map-heading a { color: #163f2e; font-weight: 650; }
+.sensor-map-frame { display: block; width: 100%; height: clamp(13rem, 42vw, 22rem); border: 1px solid #dce6da; border-radius: .65rem; background: #edf2e9; }

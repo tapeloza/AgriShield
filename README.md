@@ -154,3 +154,11 @@ From **Local Guide**, open **Weather & map**. Select a nearby town, tap a map po
 The public Open-Meteo endpoint is for non-commercial use. Check the provider's commercial terms before a commercial rollout. VITE_MAP_TILE_URL can override the tile URL with a compatible attributed provider.
 
 The guest demo starts with 24 simulated readings across two sensors. New Grower accounts start empty. To populate only the Grower account you plan to demonstrate, register or select a sensor in that account, then use **Dashboard → Test Firebase sync → Load sample readings**. This writes 12 labelled mock readings to that account's Firestore history. Repeating the action for the same sensor updates the sample rows without adding duplicates.
+
+## Map on the Sensors page
+
+The Sensors page shows a map for the selected sensor. To add an exact Google Maps pin, find the location on Google Maps and choose **Share → Embed a map → Copy HTML**. Paste it under **Sensors → Edit location → Google Maps embed**. AgriShield extracts only the Google Maps embed URL. Publish the current Firestore rules to sync saved embeds across devices.
+
+Without a saved embed, the map uses approximate OpenStreetMap town locations for recognised names, including Nelspruit and Mbombela, or shows a regional map when no town matches. Exact pins are supplied by the farmer. Maps require internet. The existing weather map remains in Local Guide.
+
+Optionally set VITE_GOOGLE_MAPS_EMBED_KEY to a restricted Maps Embed API key to show Google Maps plot searches for sensors without a saved pin. Enable the API in Google Cloud and restrict the key to Maps Embed API and the relevant website domains.

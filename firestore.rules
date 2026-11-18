@@ -15,13 +15,17 @@ service cloud.firestore {
         allow read: if owns(uid);
         allow create, update: if owns(uid)
           && sensorId.matches('^[A-Z0-9][A-Z0-9-]{1,31}$')
-          && request.resource.data.keys().hasOnly(['plot', 'bed', 'landmark'])
+          && request.resource.data.keys().hasOnly(['plot', 'bed', 'landmark', 'mapEmbed'])
           && request.resource.data.plot is string
           && request.resource.data.plot.size() >= 1 && request.resource.data.plot.size() <= 80
           && request.resource.data.bed is string
           && request.resource.data.bed.size() >= 1 && request.resource.data.bed.size() <= 80
           && request.resource.data.landmark is string
-          && request.resource.data.landmark.size() <= 120;
+          && request.resource.data.landmark.size() <= 120
+          && request.resource.data.get('mapEmbed', '') is string
+          && request.resource.data.get('mapEmbed', '').size() <= 2048
+          && (request.resource.data.get('mapEmbed', '') == ''
+            || request.resource.data.mapEmbed.matches('^https://www[.]google[.]com/maps/embed[?]pb=.+$'));
       }
 
       match /readings/{readingId} {

@@ -42,10 +42,10 @@ export function watchSensors(auth, uid, next, failed) {
 }
 
 export function saveCloudSensor(auth, uid, sensor, createIfMissing = false) {
-  const { id, plot, bed, landmark } = sensor;
+  const { id, plot, bed, landmark, mapEmbed } = sensor;
   const db = store(auth);
   const ref = doc(db, 'accounts', uid, 'sensors', id);
-  const fields = { plot, bed, landmark: landmark || '' };
+  const fields = { plot, bed, landmark: landmark || '', ...(mapEmbed ? { mapEmbed } : {}) };
   if (!createIfMissing) return setDoc(ref, fields);
   return runTransaction(db, async transaction => {
     const existing = await transaction.get(ref);

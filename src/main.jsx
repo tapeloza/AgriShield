@@ -18,6 +18,7 @@ import Support from './Support.jsx';
 import FarmOnboarding from './FarmOnboarding.jsx';
 import SensorTabs from './SensorTabs.jsx';
 import SensorRegister from './SensorRegister.jsx';
+import SensorMap from './SensorMap.jsx';
 import { firstId, initialSensors, requestedSensor, sensorPath } from './sensors.js';
 import FieldMonitor, { MoistureTrend } from './FieldMonitor.jsx';
 import './style.css';
@@ -213,7 +214,7 @@ function App({ user, ready }) {
     const local = state.sensors;
     let migrated = false;
     return watchSensors(auth, user.uid, snapshot => {
-      const remote = snapshot.docs.map(entry => ({ ...entry.data(), id: entry.id }));
+      const remote = snapshot.docs.map(entry => ({ mapEmbed: '', ...entry.data(), id: entry.id }));
       const byId = new Map(remote.map(item => [item.id, item]));
 
       setState(old => {
@@ -447,6 +448,7 @@ function App({ user, ready }) {
         </> : view === 'sensors' ? <>
           <h1>{t("Sensors")}</h1>
           <p className="intro">Register devices, update field locations and print QR labels.</p>
+          {loaded && sensorLocation && <SensorMap sensor={sensorLocation} />}
           {!demo && sensorSync && <p className="monitor-note" role="status">{sensorSync}</p>}
           {!loaded ? <p role="status">Loading sensors…</p> :
             <SensorRegister key={sensorLocation?.id ?? 'empty'} sensors={state.sensors} sensor={sensorLocation}
