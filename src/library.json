@@ -1,0 +1,47 @@
+[
+  {
+    "id": "tomato-log",
+    "crop": "tomatoes",
+    "topic": "Field records",
+    "title": "Start a tomato bed log",
+    "body": "Give each bed a name. Record the date, recent rain, irrigation and the location of each soil reading. Use the log to discuss changes with your local extension officer.",
+    "source": "AgriShield prototype · original recording template",
+    "permission": "Demo content · shareable"
+  },
+  {
+    "id": "cabbage-compare",
+    "crop": "cabbage",
+    "topic": "Soil observations",
+    "title": "Compare cabbage beds",
+    "body": "Record observations from two clearly marked spots. Note where each reading was taken so you can return to the same spot on the next visit.",
+    "source": "AgriShield prototype · original observation exercise",
+    "permission": "Demo content · shareable"
+  },
+  {
+    "id": "morogo-name",
+    "crop": "morogo",
+    "topic": "Crop records",
+    "title": "Record the local name for morogo",
+    "body": "Use the name growers use for the leafy vegetable in that bed and record the identified species if known. Bring both names when asking an extension officer for crop-specific guidance.",
+    "source": "AgriShield prototype · original recording template",
+    "permission": "Demo content · shareable"
+  },
+  {
+    "id": "water-log",
+    "crop": "all",
+    "topic": "Water records",
+    "title": "Log rain and watering separately",
+    "body": "Write down the last rain and the last time you watered each plot. Keep those notes beside the soil reading so you can review them together.",
+    "source": "AgriShield prototype · original recording template",
+    "permission": "Demo content · shareable"
+  },
+  {
+    "id": "iks-placeholder",
+    "crop": "morogo",
+    "topic": "Indigenous Knowledge Systems",
+    "title": "Community knowledge contribution",
+    "body": "Practice details withheld. This example shows how a future contribution can appear while publication permission is pending.",
+    "source": "Illustrative record · no knowledge holder or community attributed",
+    "permission": "Permission pending · placeholder only"
+  }
+]
