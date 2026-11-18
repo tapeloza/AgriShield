@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { LanguageProvider, LanguageSelect, useLanguage } from './Language.jsx';
 import { createRoot } from 'react-dom/client';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -9,9 +9,10 @@ import Account, { auth, authPage } from './Account.jsx';
 import FarmProfile from './FarmProfile.jsx';
 import ProfileMenu from './ProfileMenu.jsx';
 import Team from './Team.jsx';
+import { mergeSampleHistory, sampleReadings } from './sampleReadings.js';
 import { ReadingList, SensorList } from './ActivityLists.jsx';
 import Publications from './Publications.jsx';
-import { saveCloudReading, saveCloudSensor, saveSpecialistRole, watchReadings, watchRole, watchSensors } from './cloud.js';
+import { saveCloudReading, saveCloudSensor, saveSampleReadings, saveSpecialistRole, watchReadings, watchRole, watchSensors } from './cloud.js';
 import QuickTools from './QuickTools.jsx';
 import Support from './Support.jsx';
 import FarmOnboarding from './FarmOnboarding.jsx';
@@ -21,6 +22,7 @@ import { firstId, initialSensors, requestedSensor, sensorPath } from './sensors.
 import FieldMonitor, { MoistureTrend } from './FieldMonitor.jsx';
 import './style.css';
 
+const WeatherMap = lazy(() => import('./WeatherMap.jsx'));
 const initial = { crop: 'tomatoes', scenario: 'steady', history: [], tank: 70, demand: false, paused: false, sensors: initialSensors, sensorId: firstId };
 const newFarm = { ...initial, tank: 0, sensors: [], sensorId: '' };
 const cropName = key => crops[key]?.name ?? 'All crops';
@@ -108,6 +110,7 @@ function App({ user, ready }) {
   const [cloudReadings, setCloudReadings] = useState([]);
   const [cloudStatus, setCloudStatus] = useState('');
   const [readingFeed, setReadingFeed] = useState('Connecting to Firebase…');
+  const [sampleBusy, setSampleBusy] = useState(false);
   const [sensorSync, setSensorSync] = useState('');
   const syncAttempts = useRef(new Set());
   const [state, setState] = useState(demo ? initial : newFarm);
@@ -128,6 +131,13 @@ function App({ user, ready }) {
       if (demo && saved && !saved.sensors) {
         restored.sensors = initialSensors.map(item => item.id === firstId
           ? { ...item, scenario: restored.scenario } : item);
+      }
+      if (demo && !restored.sampleVersion) {
+        restored.history = mergeSampleHistory(restored.history, [
+          ...sampleReadings(firstId, 'tomatoes', 'simulation'),
+          ...sampleReadings('AS-002', 'morogo', 'simulation', -20),
+        ]);
+        restored.sampleVersion = 1;
       }
       const selected = restored.sensors.find(item => item.id === requestedSensor);
       if (selected && selected.id !== restored.sensorId) {
@@ -322,6 +332,22 @@ function App({ user, ready }) {
     }
   }
 
+  async function loadSampleBatch() {
+    if (!user || !sensorLocation || sampleBusy) return;
+    const items = sampleReadings(sensorLocation.id, state.crop, 'mock');
+    setSampleBusy(true);
+    setState(old => ({ ...old, history: mergeSampleHistory(old.history, items) }));
+    setCloudStatus('Sample readings saved on this device. Cloud sync pending.');
+    try {
+      await saveSampleReadings(auth, user.uid, items);
+      setCloudStatus('12 sample readings synced to Firebase.');
+    } catch {
+      setCloudStatus('Cloud sync unavailable. Sample readings are saved on this device.');
+    } finally {
+      setSampleBusy(false);
+    }
+  }
+
   async function readSensor() {
     setBusy(true);
     setSensor('Waiting for the endpoint…');
@@ -405,7 +431,10 @@ function App({ user, ready }) {
           <h1>{t("Insights")}</h1>
           <p className="intro">Activity saved in this workspace.</p>
           {!loaded ? <p role="status">Loading activity…</p> : <ActivityStats sensors={state.sensors} history={history} onView={setView} />}
-        </> : view === 'readings' ? <>
+        </> : view === 'weather' ? <Suspense fallback={<p role="status">Loading weather tools…</p>}>
+          <WeatherMap workspaceKey={farmKey} onClose={() => setView('library')} />
+        </Suspense>
+        : view === 'readings' ? <>
           <h1>{t('Saved readings')}</h1>
           {!demo && <p className="intro" role="status">{readingFeed}</p>}
           <ReadingList sensors={state.sensors} readings={history} timestamp={formatTime}
@@ -493,6 +522,8 @@ function App({ user, ready }) {
                   setSensor('');
                   record({ moisture: 52, source: 'mock' });
                 }}>Save mock reading</button>
+                <p className="monitor-note">Load 12 labelled mock readings across three days for this sensor. Run this from the account you plan to demonstrate.</p>
+                <button type="button" disabled={!loaded || busy || sampleBusy} onClick={loadSampleBatch}>Load sample readings</button>
               </details>
             </>}
             <p role="status" className="feedback">{sensor}</p>
@@ -519,8 +550,11 @@ function App({ user, ready }) {
         <p className="intro">Offline field notes and a sample permission record for Indigenous Knowledge Systems.</p>
         <section className="card guide-weather" aria-labelledby="weather-heading">
           <h2 id="weather-heading">{t("Weather warnings")}</h2>
-          <p className="monitor-note">Official South African Weather Service warnings open online.</p>
+          <p className="monitor-note">Check a five-day forecast for your farm and open official South African Weather Service warnings.</p>
           <a href="https://www.weathersa.co.za/warnings?region=rsa" target="_blank" rel="noreferrer">{t("View official weather warnings")}</a>
+          <div className="account-links weather-tools">
+            <button type="button" className="primary" onClick={() => setView('weather')}>Open weather &amp; map</button>
+          </div>
         </section>
         <div className="card filters">
           <div><label htmlFor="query">{t("Search the library")}</label><input id="query" type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Try morogo or water" /></div>

@@ -146,3 +146,11 @@ On the hosted site, sign in as a Grower and select a registered sensor. Under **
 Publish the current firestore.rules with the accounts/{uid}/sensors/{sensorId} block. Reopen the app on the original device under the same Grower account. Open **Sensors** and wait for **Sensor register synced to Firebase**. Existing local sensors are uploaded if their ID is missing from Firestore. Then sign in to the same account on the second device. The registry syncs by Firebase user ID. The demo workspace stays local.
 
 The Dashboard and Insights activity cards open lists of registered sensors, saved readings or sensors with readings. Each sensor row shows its latest moisture value, source and timestamp. Saved Readings shows whether the app is receiving updates from Firestore or displaying cached data. New readings appear on other devices signed into the same account when those readings are written to Firestore.
+
+## Weather, map and sample data
+
+From **Local Guide**, open **Weather & map**. Select a nearby town, tap a map point, enter coordinates, or grant browser location access. Forecasts use Open-Meteo, with daily temperatures, rain probability and amount, and wind gusts in South African time. The last successful forecast for the saved location is available offline while its forecast dates remain current. The map uses OpenStreetMap online tiles and does not prefetch tiles for offline use. Official warnings remain available through the SAWS link.
+
+The public Open-Meteo endpoint is for non-commercial use. Check the provider's commercial terms before a commercial rollout. VITE_MAP_TILE_URL can override the tile URL with a compatible attributed provider.
+
+The guest demo starts with 24 simulated readings across two sensors. New Grower accounts start empty. To populate only the Grower account you plan to demonstrate, register or select a sensor in that account, then use **Dashboard → Test Firebase sync → Load sample readings**. This writes 12 labelled mock readings to that account's Firestore history. Repeating the action for the same sensor updates the sample rows without adding duplicates.

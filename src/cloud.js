@@ -1,6 +1,6 @@
 import {
   collection, connectFirestoreEmulator, doc, initializeFirestore, limit, onSnapshot,
-  orderBy, persistentLocalCache, persistentMultipleTabManager, query, runTransaction, setDoc,
+  orderBy, persistentLocalCache, persistentMultipleTabManager, query, runTransaction, setDoc, writeBatch,
 } from 'firebase/firestore';
 
 let database;
@@ -51,4 +51,13 @@ export function saveCloudSensor(auth, uid, sensor, createIfMissing = false) {
     const existing = await transaction.get(ref);
     if (!existing.exists()) transaction.set(ref, fields);
   });
+}
+
+export function saveSampleReadings(auth, uid, samples) {
+  const db = store(auth);
+  const batch = writeBatch(db);
+  for (const { id, sensorId, crop, time, source, moisture } of samples) {
+    batch.set(doc(db, 'accounts', uid, 'readings', id), { sensorId, crop, time, source, moisture });
+  }
+  return batch.commit();
 }

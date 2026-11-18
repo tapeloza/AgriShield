@@ -278,3 +278,14 @@ textarea { box-sizing: border-box; width: 100%; font: inherit; color: inherit; b
   .insight-link { font-size: .73rem; line-height: 1.25; }
   .insight-arrow { font-size: .65rem; right: .3rem; }
 }
+
+.weather-title { margin-top: 1rem; }
+.weather-layout { display: grid; gap: 1rem; align-items: start; }
+.weather-tools { margin-block: .7rem; }
+.farm-map { height: clamp(15rem, 38vw, 23rem); isolation: isolate; border-radius: .7rem; border: 1px solid #dce6da; background: #edf2e9; }
+.weather-credit { display: inline-block; margin-top: .6rem; font-size: .85rem; }
+.forecast-list { list-style: none; padding: 0; margin: .75rem 0 0; }
+.forecast-list li { display: flex; justify-content: space-between; align-items: start; gap: .65rem; padding: .65rem 0; border-top: 1px solid #e1e8de; }
+.forecast-list small { display: block; color: #405b4b; }
+.forecast-values { text-align: right; }
+@media (min-width: 48rem) { .weather-layout { grid-template-columns: 1.15fr 1fr; } }
