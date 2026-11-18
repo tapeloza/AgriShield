@@ -152,8 +152,7 @@ export default function Khulani({ dialogRef, onClose, workspaceKey }) {
         </div>
         {history.length > 0 && <button type="button" onClick={clearChat}>Clear chat</button>}
       </div>
-      <section className="khulani-transcript" ref={transcript} role="log" aria-label="Chat history" tabIndex={0}>
-        {history.length === 0 && <p>Ask about soil moisture, local weather or what to check before watering.</p>}
+      <section hidden={history.length === 0} className="khulani-transcript" ref={transcript} role="log" aria-label="Chat history" tabIndex={0}>
         {history.map(entry => <article className="khulani-turn" key={entry.id}>
           <p className="khulani-question"><strong>You · {beds[entry.bed]?.name}</strong><br />{entry.question}</p>
           <div className="khulani-answer">
@@ -167,16 +166,25 @@ export default function Khulani({ dialogRef, onClose, workspaceKey }) {
           </div>
         </article>)}
       </section>
-      {history.length === 0 && <div className="khulani-prompts">
-        {prompts.map(prompt => <button type="button" onClick={() => ask(prompt)} key={prompt}>{prompt}</button>)}
-      </div>}
+      {history.length === 0 && <>
+        <div className="khulani-welcome">
+          <span className="khulani-orb" aria-hidden="true" />
+          <h3>Ask Khulani about your field</h3>
+          <p>Explore soil readings, rain and the Local Guide.</p>
+        </div>
+        <div className="khulani-prompts">
+        {prompts.map(prompt => <button type="button" onClick={() => ask(prompt)} key={prompt}>
+            {prompt}<span aria-hidden="true">↗</span>
+          </button>)}
+        </div>
+      </>}
       <form className="khulani-form" onSubmit={event => { event.preventDefault(); ask(question); }}>
         <label htmlFor="khulani-question">Your question</label>
         <div className="khulani-composer">
-          <input ref={input} id="khulani-question" value={question} maxLength={240}
+          <input ref={input} id="khulani-question" value={question} maxLength={240} placeholder="Ask about your field…"
             onChange={event => setQuestion(event.target.value)} />
-          <button type="button" aria-pressed={listening} onClick={dictate}>{listening ? 'Stop listening' : 'Use voice'}</button>
-          <button className="primary" disabled={!question.trim()}>Send</button>
+          <button type="button" aria-pressed={listening} aria-label={listening ? "Stop listening" : "Use voice"} onClick={dictate}>{listening ? 'Stop' : 'Voice'}</button>
+          <button type="submit" className="primary khulani-send" aria-label="Send" disabled={!question.trim()}><span aria-hidden="true">↑</span></button>
         </div>
       </form>
       {message && <p role="status">{message}</p>}
