@@ -340,11 +340,9 @@ textarea { box-sizing: border-box; width: 100%; font: inherit; color: inherit; b
 .khulani-prompts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; }
 .khulani-prompts button { display: flex; align-items: center; justify-content: space-between; gap: .35rem; min-height: 44px; text-align: left; font-size: .88rem; background: #fff; border: 1px solid #c9d9cb; border-radius: .85rem; }
 .khulani-prompts button span { color: #527641; }
-.khulani-transcript { max-height: min(42dvh, 26rem); overflow: auto; overscroll-behavior: contain; padding: .25rem; }
 .khulani-turn { margin-block: .5rem 1rem; }
 .khulani-question { width: fit-content; max-width: 90%; margin-left: auto; padding: .65rem .85rem; border-radius: 1rem 1rem .3rem 1rem; background: #dcebd3; overflow-wrap: anywhere; }
-.khulani-answer { padding: .8rem 1rem; background: #fff; border: 1px solid #dbe5d8; border-radius: .35rem 1rem 1rem; }
-.khulani-answer p { white-space: pre-line; }
+.khulani-answer p { white-space: pre-line; overflow-wrap: anywhere; }
 .khulani-answer li { overflow-wrap: anywhere; }
 .khulani-composer { display: flex; gap: .35rem; align-items: center; padding: .35rem; background: #fff; border: 1px solid #a7bcae; border-radius: 1.7rem; }
 .khulani-composer input { min-width: 0; flex: 1 1 0; width: 0; border: 0; border-radius: 1.4rem; background: transparent; padding-inline: .65rem .3rem; }

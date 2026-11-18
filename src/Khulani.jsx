@@ -19,7 +19,6 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
   const [listening, setListening] = useState(false);
   const [message, setMessage] = useState('');
   const recognition = useRef(null);
-  const transcript = useRef(null);
   const heading = useRef(null);
   const [publications, setPublications] = useState([]);
   const pending = useRef(false);
@@ -28,12 +27,6 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
   const input = useRef(null);
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  function scrollChat() {
-    const log = transcript.current;
-    if (log) log.scrollTop = log.scrollHeight;
-  }
-
-  useEffect(scrollChat, [history]);
   useEffect(() => { heading.current?.focus(); }, []);
   useEffect(() => {
     if (!auth) return;
@@ -198,7 +191,7 @@ export default function Khulani({ workspaceKey, sensors, readings, ready, auth }
         <p>Chat history stays on this device.</p>
         {history.length > 0 && <button type="button" className="khulani-clear" disabled={working} onClick={clearChat}>Clear chat</button>}
       </header>
-      <section hidden={history.length === 0} className="khulani-transcript" ref={transcript} role="log" aria-label="Chat history" tabIndex={0}>
+      <section hidden={history.length === 0} role="log" aria-label="Chat history">
         {history.map(entry => <article className="khulani-turn" key={entry.id} id={'khulani-turn-' + entry.id} tabIndex={-1}>
           <p className="khulani-question"><strong>You</strong><br />{entry.question}</p>
           <div className="khulani-answer">
