@@ -9,6 +9,8 @@ import Account, { auth, authPage } from './Account.jsx';
 import FarmProfile from './FarmProfile.jsx';
 import ProfileMenu from './ProfileMenu.jsx';
 import Team from './Team.jsx';
+import QuickTools from './QuickTools.jsx';
+import Support from './Support.jsx';
 import FarmOnboarding from './FarmOnboarding.jsx';
 import SensorTabs from './SensorTabs.jsx';
 import SensorRegister from './SensorRegister.jsx';
@@ -25,6 +27,8 @@ const formatTime = value => new Date(value).toLocaleString('en-ZA', {
 const sourceLabels = { simulation: 'Simulation', mock: 'Mock sensor', esp32: 'ESP32 endpoint' };
 
 const demo = /^\/demo\/?$/.test(location.pathname);
+
+const supportPage = /^\/support\/?$/.test(location.pathname);
 
 function Root() {
   const [user, setUser] = useState(null);
@@ -65,7 +69,7 @@ function ActivityStats({ sensors, history }) {
 function App({ user, ready }) {
   const { t } = useLanguage();
   const farmKey = user && !demo ? 'farm:' + user.uid : 'demo';
-  const workspace = !authPage && (Boolean(user) || demo);
+  const workspace = !authPage && !supportPage && (Boolean(user) || demo);
   const [state, setState] = useState(demo ? initial : newFarm);
   const [loaded, setLoaded] = useState(false);
   const [storage, setStorage] = useState('');
@@ -214,6 +218,15 @@ function App({ user, ready }) {
     }
   }
 
+  const sample = demoReadings[state.scenario];
+  const speech = workspace && loaded && sensorLocation && current ? [
+    'Sensor ' + sensorLocation.id + '. ' + sensorLocation.plot + ', ' + sensorLocation.bed + '.',
+    sourceLabels[current.source] + '. Soil moisture: ' + Number(current.moisture.toFixed(1)) + ' percent.',
+    ...(demo ? ['Simulated soil pH: ' + sample.ph + '. Temperature: ' + sample.temperature +
+      ' degrees Celsius. Rainfall: ' + sample.rainfall + ' millimetres. Soil nutrients: ' + sample.nutrients +
+      '. Reservoir: ' + state.tank + ' percent.'] : []),
+  ].join(' ') : '';
+
   const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const results = library.filter(entry => {
     const searchable = [cropName(entry.crop), ...Object.values(entry)].join(' ').toLowerCase();
@@ -246,7 +259,7 @@ function App({ user, ready }) {
     </header>
     <main id="main" className={'wrap' + (authPage ? ' auth-main' : '')} tabIndex={-1}>
       {storage && <p className="notice" role="status">{storage}</p>}
-      {authPage ? <Account page={authPage} user={user} ready={ready} />
+      {supportPage ? <Support /> : authPage ? <Account page={authPage} user={user} ready={ready} />
         : !workspace ? <section className="welcome welcome-hero">
           <h1>{t("Manage your farm with AgriShield")}</h1>
           <p className="intro">Monitor field conditions, review readings and find crop guidance.</p>
@@ -369,6 +382,7 @@ function App({ user, ready }) {
       {workspace && loaded && needsDetails && !state.onboardingDismissed && user && !demo &&
         <FarmOnboarding uid={user.uid} onClose={closeOnboarding} />}
     </main>
+    <QuickTools speech={speech} demo={demo} />
     {import.meta.env.PROD && <footer className="wrap footer"><span role="status">{t(offline)}</span></footer>}
   </>;
 }

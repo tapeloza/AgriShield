@@ -238,3 +238,25 @@ main { padding-block: clamp(1.1rem, 3vw, 2.25rem) .85rem; }
   .brand-wordmark { width: 5.65rem; }
   .language-control select { width: 5.45rem; padding-inline: .3rem; }
 }
+
+body { padding-bottom: 5rem; }
+.quick-trigger { position: fixed; z-index: 3; inset: auto max(1rem, calc((100vw - 73rem) / 2)) max(1rem, env(safe-area-inset-bottom)) auto; min-height: 3rem; display: inline-flex; align-items: center; gap: .45rem; border-radius: 2rem; background: #163f2e; border: 2px solid #b8dc94; color: white; padding: .5rem .9rem; box-shadow: 0 7px 24px #152f2b36; animation: tools-pulse 1.4s ease-out 3; }
+.quick-trigger span { color: #d7eda7; }
+@keyframes tools-pulse { from { box-shadow: 0 0 0 0 #75aa6288; } to { box-shadow: 0 0 0 13px #75aa6200; } }
+.quick-panel { position: fixed; inset: auto max(1rem, calc((100vw - 73rem) / 2)) calc(max(1rem, env(safe-area-inset-bottom)) + 4rem) auto; margin: 0; width: min(22rem, calc(100% - 2rem)); max-height: calc(100dvh - 7rem); overflow: auto; padding: 1rem; background: white; border: 1px solid #d8e4d9; border-radius: .95rem; box-shadow: 0 12px 34px #0e241d26; color: #173729; }
+.quick-panel:popover-open { display: grid; gap: .55rem; }
+.quick-panel button, .quick-panel a { text-align: left; min-height: 44px; }
+.quick-panel a { display: flex; align-items: center; color: #163f2e; font-weight: 650; padding-inline: .9rem; border: 1px solid #819889; border-radius: .65rem; text-decoration: none; }
+.quick-panel small { float: right; color: #355a48; }
+.quick-panel .monitor-note { margin: 0; }
+.reading-mode { font-size: 118%; background: #fff; }
+.reading-mode .card, .reading-mode input, .reading-mode select, .reading-mode .quick-panel { border-color: #315746; }
+.reading-mode :is(.intro, .monitor-note, .scale, .footer, .topic) { color: #213f32; }
+.reading-mode .hero .scale { color: #fff; }
+.reading-mode .quick-trigger { animation: none; }
+@media (prefers-reduced-motion: reduce) { .quick-trigger { animation: none; } }
+.support-offices, .support-institutions { padding: 0; list-style: none; }
+.support-offices li { display: flex; justify-content: space-between; gap: .5rem; border-top: 1px solid #e0ebe0; padding-block: .55rem; }
+.support-offices a, .support-institutions a { color: #163f2e; }
+.support-institutions li + li { margin-top: .65rem; }
+.reading-mode .welcome-hero .intro { color: #fff; }

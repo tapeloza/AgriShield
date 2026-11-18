@@ -77,3 +77,14 @@ New email address|Likheli le-imeyili lelisha|Adirese leyintshwa ya imeyili|Aḓi
 Menu|Imenyu|Menyu|Menu|Imenyu
 Main navigation|Imenyu lenkhulu|Menyu leyikulu|Menu khulwane|Imenyu ekulu
 Open profile menu|Vula imenyu yephrofayili|Pfula menyu ya phurofayili|Vulani menu ya phurofaiḽi|Vula imenyu yephrofayili
+Quick tools|Emathulusi lasheshako|Switirhisiwa swa xihatla|Zwishumiswa zwa u ṱavhanya|Amathulusi asheshako
+Read sensor data aloud|Fundza tilinganiso ngelivi|Hlaya mipimo hi rito|Vhalani mielo nga ipfi|Funda iimedo ngelizwi
+Stop reading|Yekela kufundza|Yima ku hlaya|Litshani u vhala|Lisa ukufunda
+Get support|Tfola lusito|Kuma mpfuno|Wanani thuso|Thola isizo
+Accessibility mode|Indlela yekufinyelela|Mokhoa wa ku fikelela|Nḓila ya u swikelela|Indlela yokufikelela
+On|Kuvuliwe|Swi pfuriwile|Zwo vulwa|Kuvuliwe
+Off|Kuvaliwe|Swi pfariwile|Zwo valwa|Kuvaliwe
+Back to AgriShield|Buyela ku-AgriShield|Tlhelela eka AgriShield|Humbelani kha AgriShield|Buyela ku-AgriShield
+Agricultural support|Lusito lwetekulima|Mpfuno wa vurimi|Thuso ya vhulimi|Isizo lezokulima
+Find an extension officer|Tfola umeluleki wetekulima|Kuma mutsundzuxi wa vurimi|Wanani mueletshedzi wa vhulimi|Thola umeluleki wezokulima
+Province|Sifundza|Xifundzankulu|Vunḓu|Isifunda

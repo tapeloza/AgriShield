@@ -72,7 +72,7 @@ From the welcome page choose **Create an account** or **Sign in**. Successful ve
 2. In **Authentication → Sign-in method**, enable **Email/Password**. Create an account on /signup, then test returning sign-in and password reset on /signin.
 3. Enable **Google** and set the support email in the Firebase console. On the signup or sign-in page, use **Continue with Google**. Your browser must allow the sign-in pop-up.
 4. Add your app's hostname under **Authentication → Settings → Authorised domains**. The loopback host for local Google testing may need to be added manually. Use localhost if Firebase already authorises that hostname.
-5. Restart dev or rebuild and restart preview. For a hosted test, deploy the new contents of dist to your authorised HTTPS site and configure the host to serve index.html for /signup, /signin and /demo. Verify each provider, reload to check that the session is remembered, and sign out on a shared device.
+5. Restart dev or rebuild and restart preview. For a hosted test, deploy the new contents of dist to your authorised HTTPS site and configure the host to serve index.html for /signup, /signin, /demo and /support. Verify each provider, reload to check that the session is remembered, and sign out on a shared device.
 
 The ZIP's prebuilt demo has no Firebase project configuration. Firebase stores identities. IndexedDB stores device-local readings. Account linking and cross-device data sync are outside this prototype. Email changes use a Firebase verification link sent to the new address.
 
@@ -118,3 +118,11 @@ Image prompts used to produce the assets:
 Use the header selector to switch between English, siSwati, Xitsonga, Tshivenḓa and isiNdebele. The choice is saved on the device. Translations ship with the app and can be selected offline. The pilot covers navigation, sign-up and sign-in labels, dashboard and sensor headings, and common forms. Local Guide articles, some explanations and technical messages remain in English. The pilot wording in src/pilot-translations.txt needs review by fluent speakers before a public rollout.
 
 The header uses the supplied AgriShield logo. On narrow screens, the navigation opens from the header menu button.
+
+## Quick tools
+
+The floating button opens sensor read-aloud, agricultural support and accessibility mode. Read-aloud uses the browser's speech synthesis and an English device voice. It identifies the selected sensor and reading source. The demo also reads simulated pH, temperature, rainfall, nutrient status and reservoir level. Offline speech depends on a locally installed voice.
+
+The support page at /support lists district offices for Limpopo and Mpumalanga and links to national agricultural resources. The bundled directory is available offline and external websites need internet. Call the district office to locate the extension officer for your farm area.
+
+Accessibility mode increases the base text size, strengthens contrast and disables the button's introductory pulse. The preference is saved on the device. The pulse also respects the operating system's reduced-motion preference.
