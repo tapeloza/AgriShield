@@ -10,7 +10,7 @@ function readHistory(key) {
   }
 }
 
-export default function Khulani({ dialogRef, onClose, workspaceKey }) {
+export default function Khulani({ workspaceKey }) {
   const storageKey = 'agrishield.khulani:' + workspaceKey;
   const [history, setHistory] = useState(() => readHistory(storageKey));
   const [bed, setBed] = useState(() => history.at(-1)?.bed ?? 'cabbage');
@@ -19,6 +19,8 @@ export default function Khulani({ dialogRef, onClose, workspaceKey }) {
   const [message, setMessage] = useState('');
   const recognition = useRef(null);
   const transcript = useRef(null);
+  const heading = useRef(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const input = useRef(null);
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -28,6 +30,7 @@ export default function Khulani({ dialogRef, onClose, workspaceKey }) {
   }
 
   useEffect(scrollChat, [history]);
+  useEffect(() => { heading.current?.focus(); }, []);
   useEffect(() => () => {
     const active = recognition.current;
     recognition.current = null;
@@ -136,14 +139,10 @@ export default function Khulani({ dialogRef, onClose, workspaceKey }) {
     }
   }
 
-  return <dialog ref={dialogRef} className="khulani-dialog" aria-labelledby="khulani-title"
-    onToggle={event => { if (event.newState === 'open') scrollChat(); }}
-    onClose={() => { stopListening(); window.speechSynthesis?.cancel(); setMessage(''); onClose(); }}>
-    <header className="khulani-header">
-      <div><h2 id="khulani-title">Khulani AI</h2><p>Sample farm · Chat history stays on this device</p></div>
-      <form method="dialog"><button aria-label="Close Khulani AI">Close</button></form>
-    </header>
-    <div className="khulani-body">
+  return <div className="khulani-page">
+    <button type="button" className="khulani-sidebar-toggle" aria-expanded={sidebarOpen} aria-controls="khulani-sidebar"
+      onClick={() => setSidebarOpen(open => !open)}>{sidebarOpen ? 'Hide chat menu' : 'Show chat menu'}</button>
+    <aside id="khulani-sidebar" className="khulani-sidebar" data-open={sidebarOpen} aria-label="Khulani chat menu">
       <div className="khulani-controls">
         <div><label htmlFor="khulani-bed">Sample bed</label>
           <select id="khulani-bed" value={bed} onChange={event => setBed(event.target.value)}>
@@ -152,8 +151,25 @@ export default function Khulani({ dialogRef, onClose, workspaceKey }) {
         </div>
         {history.length > 0 && <button type="button" onClick={clearChat}>Clear chat</button>}
       </div>
+      {history.length > 0 && <nav aria-label="Previous questions">
+        <h2>Previous questions</h2>
+        <ul>{[...history].reverse().map(entry => <li key={entry.id}>
+          <button type="button" onClick={() => {
+            const turn = document.getElementById('khulani-turn-' + entry.id);
+            setSidebarOpen(false);
+            turn?.focus();
+            turn?.scrollIntoView({ block: 'nearest' });
+          }}>{entry.question}</button>
+        </li>)}</ul>
+      </nav>}
+    </aside>
+    <section className="khulani-body" aria-labelledby="khulani-title">
+      <header className="khulani-header">
+        <h1 id="khulani-title" ref={heading} tabIndex={-1}>Khulani AI</h1>
+        <p>Sample farm · Chat history stays on this device</p>
+      </header>
       <section hidden={history.length === 0} className="khulani-transcript" ref={transcript} role="log" aria-label="Chat history" tabIndex={0}>
-        {history.map(entry => <article className="khulani-turn" key={entry.id}>
+        {history.map(entry => <article className="khulani-turn" key={entry.id} id={'khulani-turn-' + entry.id} tabIndex={-1}>
           <p className="khulani-question"><strong>You · {beds[entry.bed]?.name}</strong><br />{entry.question}</p>
           <div className="khulani-answer">
             <h3>Khulani</h3>
@@ -189,6 +205,6 @@ export default function Khulani({ dialogRef, onClose, workspaceKey }) {
       </form>
       {message && <p role="status">{message}</p>}
       <p className="monitor-note">Use voice for English dictation. Your browser may process speech online. Typed prompts work offline after the app loads.</p>
-    </div>
-  </dialog>;
+    </section>
+  </div>;
 }

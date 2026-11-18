@@ -1,3 +1,4 @@
+import BrandLoader from './BrandLoader.jsx';
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from './Language.jsx';
 import { initializeApp } from 'firebase/app';
@@ -98,6 +99,7 @@ export default function Account({ page, user, ready }) {
   }
 
   return <div className="auth-layout">
+    {user && <BrandLoader pending />}
     <aside className="auth-image" aria-label="Vegetable fields">
       <div>
         <strong>Know your fields.</strong>

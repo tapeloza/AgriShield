@@ -16,6 +16,7 @@ import NewsFeed from './NewsFeed.jsx';
 import { saveCloudReading, saveCloudSensor, saveSampleReadings, saveSpecialistRole, watchReadings, watchRole, watchSensors } from './cloud.js';
 import QuickTools from './QuickTools.jsx';
 import Khulani from './Khulani.jsx';
+import BrandLoader from './BrandLoader.jsx';
 import Alerts from './Alerts.jsx';
 import Support from './Support.jsx';
 import FarmOnboarding from './FarmOnboarding.jsx';
@@ -56,6 +57,7 @@ function Root() {
     });
   }, []);
 
+  if (!ready && !demo && !supportPage && !publicGuide && !publicAlerts && location.hash !== '#khulani') return <BrandLoader pending />;
   return <App key={authPage ?? user?.uid ?? 'guest'} user={user} ready={ready} />;
 }
 
@@ -121,13 +123,12 @@ function App({ user, ready }) {
   const [sampleBusy, setSampleBusy] = useState(false);
   const [sensorSync, setSensorSync] = useState('');
   const syncAttempts = useRef(new Set());
-  const khulaniDialog = useRef(null);
-  const khulaniTrigger = useRef(null);
   const [state, setState] = useState(demo ? initial : newFarm);
   const [loaded, setLoaded] = useState(false);
   const [storage, setStorage] = useState('');
   const [offline, setOffline] = useState(import.meta.env.PROD ? 'Preparing offline access…' : 'Offline cache available in production preview');
-  const [view, setView] = useState(publicAlerts ? 'alerts' : publicGuide ? 'library' : 'dashboard');
+  const [khulaniOpen, setKhulaniOpen] = useState(() => location.hash === '#khulani');
+  const [view, updateView] = useState(publicAlerts ? 'alerts' : publicGuide ? 'library' : 'dashboard');
   const [weatherReturn, setWeatherReturn] = useState('library');
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -135,6 +136,20 @@ function App({ user, ready }) {
   const [sensor, setSensor] = useState('');
   const [busy, setBusy] = useState(false);
   const [needsDetails, setNeedsDetails] = useState(false);
+
+  useEffect(() => {
+    const syncLocation = () => setKhulaniOpen(location.hash === '#khulani');
+    window.addEventListener('hashchange', syncLocation);
+    return () => window.removeEventListener('hashchange', syncLocation);
+  }, []);
+
+  function setView(next) {
+    if (location.hash === '#khulani') {
+      window.history.replaceState(window.history.state, '', location.pathname + location.search);
+      setKhulaniOpen(false);
+    }
+    updateView(next);
+  }
 
   useEffect(() => {
     loadState(farmKey).then(saved => {
@@ -402,18 +417,17 @@ function App({ user, ready }) {
   });
 
   return <>
-    <a className="skip" href="#main">Skip to content</a>
+    <a className="skip" href="#main" onClick={event => { event.preventDefault(); document.getElementById("main")?.focus(); }}>Skip to content</a>
     <header className="top">
       <div className="wrap header header-single">
         <a href="/" className="brand brand-wordmark">
           <img src="/agrishield-logo.png" alt="AgriShield" width="1024" height="572" />
         </a>
-        {workspace && <WorkspaceNav className="desktop-nav" specialist={specialist} view={view} onView={setView} />}
+        {workspace && <WorkspaceNav className="desktop-nav" specialist={specialist} view={khulaniOpen ? null : view} onView={setView} />}
         <div className="header-actions">
           {workspace && <button type="button" className="mobile-nav-toggle" popoverTarget="workspace-navigation"
             aria-label={t('Menu')} title={t('Menu')}>☰</button>}
-          <button type="button" className="khulani-launch" ref={khulaniTrigger} aria-haspopup="dialog"
-            onClick={() => khulaniDialog.current.showModal()}>Khulani AI</button>
+          <a className="khulani-launch" href="#khulani" aria-current={khulaniOpen ? "page" : undefined}>Khulani AI</a>
           <LanguageSelect />
           {workspace && <ProfileMenu user={user} demo={demo} auth={auth}
             onAccount={() => setView('account')} onTeam={() => setView('team')} />}
@@ -426,9 +440,11 @@ function App({ user, ready }) {
         </div>}
       </div>
     </header>
-    <main id="main" className={'wrap' + (authPage ? ' auth-main' : '')} tabIndex={-1}>
+    <BrandLoader key={khulaniOpen ? 'khulani' : view} />
+    <main id="main" className={khulaniOpen ? 'khulani-main' : 'wrap' + (authPage ? ' auth-main' : '')} tabIndex={-1}>
       {storage && <p className="notice" role="status">{storage}</p>}
-      {supportPage ? <Support /> : authPage ? <Account page={authPage} user={user} ready={ready} />
+      {khulaniOpen ? <Khulani key={workspace ? farmKey : 'public'} workspaceKey={workspace ? farmKey : 'public'} />
+        : supportPage ? <Support /> : authPage ? <Account page={authPage} user={user} ready={ready} />
         : !workspace && !publicGuide && !publicAlerts ? <section className="welcome welcome-hero">
           <h1>{t("Manage your farm with AgriShield")}</h1>
           <p className="intro">Monitor field conditions, review readings and find crop guidance.</p>
@@ -593,13 +609,11 @@ function App({ user, ready }) {
           </article>)}
         </div>
       </>}
-      {workspace && loaded && needsDetails && role === 'grower' && !state.onboardingDismissed && user && !demo &&
+      {!khulaniOpen && workspace && loaded && needsDetails && role === 'grower' && !state.onboardingDismissed && user && !demo &&
         <FarmOnboarding uid={user.uid} onClose={closeOnboarding} />}
     </main>
-    <QuickTools speech={speech} speechClips={speechClips} demo={demo} />
-    <Khulani key={workspace ? farmKey : 'public'} workspaceKey={workspace ? farmKey : 'public'}
-      dialogRef={khulaniDialog} onClose={() => khulaniTrigger.current?.focus()} />
-    {import.meta.env.PROD && <footer className="wrap footer"><span role="status">{t(offline)}</span></footer>}
+    {!khulaniOpen && <QuickTools speech={speech} speechClips={speechClips} demo={demo} />}
+    {!khulaniOpen && import.meta.env.PROD && <footer className="wrap footer"><span role="status">{t(offline)}</span></footer>}
   </>;
 }
 

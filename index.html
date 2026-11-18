@@ -11,8 +11,13 @@
   <title>AgriShield</title>
 </head>
 <body>
-  <div id="root"></div>
-  <noscript>Enable JavaScript to run AgriShield.</noscript>
+  <div id="root">
+    <div role="status" style="position:fixed;inset:0;display:grid;place-content:center;justify-items:center;background:#f7faf5;color:#173729;font-family:system-ui">
+      <img src="/agrishield-logo.png" width="230" height="128" alt="">
+      <span>Opening AgriShield…</span>
+    </div>
+  </div>
+  <noscript><style>#root { display: none; }</style>Enable JavaScript to run AgriShield.</noscript>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
