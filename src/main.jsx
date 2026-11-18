@@ -30,6 +30,7 @@ const sourceLabels = { simulation: 'Simulation', mock: 'Mock sensor', esp32: 'ES
 
 const demo = /^\/demo\/?$/.test(location.pathname);
 
+const localEndpoint = import.meta.env.DEV || ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 const supportPage = /^\/support\/?$/.test(location.pathname);
 
 function Root() {
@@ -194,8 +195,8 @@ function App({ user, ready }) {
   const missingSensor = loaded && requestedSensor && !state.sensors.some(item => item.id === requestedSensor)
     ? requestedSensor : '';
   const crop = crops[state.crop];
-  const current = reading ?? (demo ? { moisture: demoReadings[state.scenario].moisture, source: 'simulation' }
-    : sensorHistory.find(item => item.source !== 'simulation'));
+  const current = demo ? (reading ?? { moisture: demoReadings[state.scenario].moisture, source: 'simulation' })
+    : sensorHistory.find(item => item.source !== 'simulation');
   const status = demo ? irrigationStatus(current.moisture, crop.range) : null;
   const demand = irrigationDemand(demoReadings[state.scenario].moisture, crop.range, state.demand);
   function changeSimulation(changes) {
@@ -369,7 +370,7 @@ function App({ user, ready }) {
           <SensorTabs current={current} status={status} crop={crop}
             scenario={demo ? demoReadings[state.scenario] : null} source={sourceLabels[current?.source]} />
           <section className="card" aria-labelledby="setup-title">
-            <h2 id="setup-title">{demo ? 'Demo controls' : 'Read a field sensor'}</h2>
+            <h2 id="setup-title">{demo ? 'Demo controls' : 'Sensor connection'}</h2>
             <fieldset disabled={!loaded || busy}>
               <label htmlFor="crop">{t("Crop")}</label>
               <select id="crop" value={state.crop} onChange={event => changeSimulation({ crop: event.target.value })}>
@@ -392,11 +393,23 @@ function App({ user, ready }) {
                 setSensor('Simulated reading saved to recent readings.');
               }}>Record simulated reading</button></>}
             </fieldset>
-            <details>
+            {localEndpoint && <details>
               <summary>Local Wi-Fi sensor</summary>
               <p>Reads the configured endpoint once. Set up the mock or ESP32 connection using the project guide.</p>
               <button disabled={!loaded || busy} onClick={readSensor}>Read endpoint</button>
-            </details>
+            </details>}
+            {!demo && <>
+              <p className="monitor-note">Cloud readings from Firebase appear here automatically.</p>
+              {!localEndpoint && <p className="monitor-note">A physical sensor needs a connected gateway to send its readings online.</p>}
+              <details>
+                <summary>Test Firebase sync</summary>
+                <p>Save a labelled 52% mock reading for the selected sensor. No hardware is contacted.</p>
+                <button type="button" disabled={!loaded || busy} onClick={() => {
+                  setSensor('');
+                  record({ moisture: 52, source: 'mock' });
+                }}>Save mock reading</button>
+              </details>
+            </>}
             <p role="status" className="feedback">{sensor}</p>
             {!demo && cloudStatus && <p className="monitor-note" role="status">{cloudStatus}</p>}
           </section>
@@ -413,7 +426,7 @@ function App({ user, ready }) {
               <div><strong>{cropName(item.crop)}</strong><small>{sourceLabels[item.source]} · {formatTime(item.time)}</small></div>
               <strong>{Number(item.moisture.toFixed(1))}%</strong>
             </li>)}
-          </ul> : <p>{demo ? 'Record a simulated reading to start your log.' : 'Read the local endpoint to start your log.'}</p>}
+          </ul> : <p>{demo ? 'Record a simulated reading to start your log.' : 'Waiting for a reading from this sensor.'}</p>}
         </section>
         </>}
       </> : <>
