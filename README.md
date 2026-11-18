@@ -144,3 +144,5 @@ On the hosted site, sign in as a Grower and select a registered sensor. Under **
 ## Sync sensors between devices
 
 Publish the current firestore.rules with the accounts/{uid}/sensors/{sensorId} block. Reopen the app on the original device under the same Grower account. Open **Sensors** and wait for **Sensor register synced to Firebase**. Existing local sensors are uploaded if their ID is missing from Firestore. Then sign in to the same account on the second device. The registry syncs by Firebase user ID. The demo workspace stays local.
+
+The Dashboard and Insights activity cards open lists of registered sensors, saved readings or sensors with readings. Each sensor row shows its latest moisture value, source and timestamp. Saved Readings shows whether the app is receiving updates from Firestore or displaying cached data. New readings appear on other devices signed into the same account when those readings are written to Firestore.

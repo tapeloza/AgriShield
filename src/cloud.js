@@ -27,7 +27,9 @@ export function saveSpecialistRole(auth, uid) {
 
 export function watchReadings(auth, uid, next, failed) {
   const readings = query(collection(store(auth), 'accounts', uid, 'readings'), orderBy('time', 'desc'), limit(100));
-  return onSnapshot(readings, snapshot => next(snapshot.docs.map(item => ({ ...item.data(), id: item.id }))), failed);
+  return onSnapshot(readings, { includeMetadataChanges: true }, snapshot => {
+    next(snapshot.docs.map(item => ({ ...item.data(), id: item.id })), snapshot.metadata.fromCache);
+  }, failed);
 }
 
 export function saveCloudReading(auth, uid, reading) {

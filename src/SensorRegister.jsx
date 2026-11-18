@@ -5,7 +5,7 @@ import { sensorPath, validSensorId } from './sensors.js';
 
 const empty = { id: '', plot: '', bed: '', landmark: '' };
 
-export default function SensorRegister({ sensors, sensor, lastSeen, missing, disabled, onSelect, onSave }) {
+export default function SensorRegister({ sensors, sensor, latest, lastSeen, missing, disabled, onSelect, onSave }) {
   const { t } = useLanguage();
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(empty);
@@ -66,6 +66,7 @@ export default function SensorRegister({ sensors, sensor, lastSeen, missing, dis
           {sensors.map(item => <option key={item.id} value={item.id}>{item.plot} · {item.bed} · {item.id}</option>)}
         </select>
         <p className="monitor-note"><strong>{sensor.id}</strong>{sensor.landmark && ' · ' + sensor.landmark}</p>
+        {latest && <p><strong>{Number(latest.moisture.toFixed(1))}%</strong> · {t('Moisture')}</p>}
         <p>{lastSeen ? 'Last recorded · ' + lastSeen : 'No readings recorded for this sensor.'}</p>
       </> : <p>No sensors registered. Add the ID printed on your first device.</p>}
       <div className="account-links sensor-actions">

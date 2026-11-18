@@ -263,3 +263,18 @@ body { padding-bottom: 5rem; }
 .publication-create { margin-top: 1rem; background: #daf0ad; color: #163f2e; border-color: #daf0ad; }
 .publication-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 textarea { box-sizing: border-box; width: 100%; font: inherit; color: inherit; border: 1px solid #819889; border-radius: .55rem; padding: .55rem .65rem; }
+
+.insight-link { position: relative; display: grid; align-content: start; gap: .4rem; text-align: left; }
+.insight-link:hover { box-shadow: 0 4px 16px #213c2924; border-color: #82a58c; }
+.insight-label { display: block; padding-right: .75rem; overflow-wrap: anywhere; }
+.insight-number { font-size: clamp(1.45rem, 4vw, 2.25rem); color: #193e30; line-height: 1.1; }
+.insight-link:nth-child(2) .insight-number { color: #244e83; }
+.insight-link:nth-child(3) .insight-number { color: #6e4b1d; }
+.insight-arrow { position: absolute; top: .45rem; right: .5rem; color: #325347; }
+.activity-list li { overflow-wrap: anywhere; }
+.activity-value { display: flex; flex: 0 0 auto; align-items: end; flex-direction: column; gap: .3rem; }
+.activity-value button { font-size: .82rem; padding-inline: .5rem; }
+@media (max-width: 31rem) {
+  .insight-link { font-size: .73rem; line-height: 1.25; }
+  .insight-arrow { font-size: .65rem; right: .3rem; }
+}

@@ -9,6 +9,7 @@ import Account, { auth, authPage } from './Account.jsx';
 import FarmProfile from './FarmProfile.jsx';
 import ProfileMenu from './ProfileMenu.jsx';
 import Team from './Team.jsx';
+import { ReadingList, SensorList } from './ActivityLists.jsx';
 import Publications from './Publications.jsx';
 import { saveCloudReading, saveCloudSensor, saveSpecialistRole, watchReadings, watchRole, watchSensors } from './cloud.js';
 import QuickTools from './QuickTools.jsx';
@@ -82,16 +83,20 @@ function WorkspaceNav({ className = '', view, onView, specialist }) {
   </nav>;
 }
 
-function ActivityStats({ sensors, history }) {
+function ActivityStats({ sensors, history, onView }) {
   const { t } = useLanguage();
   const entries = [
-    { label: 'Registered sensors', value: sensors.length },
-    { label: 'Saved readings', value: history.length },
-    { label: 'Sensors with readings', value: new Set(history.map(item => item.sensorId ?? firstId)).size },
+    { label: 'Registered sensors', view: 'sensors', value: sensors.length },
+    { label: 'Saved readings', view: 'readings', value: history.length },
+    { label: 'Sensors with readings', view: 'sensors-with-readings',
+      value: sensors.filter(sensor => history.some(item => item.sensorId === sensor.id)).length },
   ];
-  return <dl className="insight-grid">{entries.map(({label, value}) =>
-    <div className="card" key={label}><dt>{t(label)}</dt><dd>{value}</dd></div>
-  )}</dl>;
+  return <div className="insight-grid">{entries.map(({ label, value, view }) =>
+    <button type="button" className="card insight-link" key={label} onClick={() => onView(view)}>
+      <span className="insight-label">{t(label)}</span><strong className="insight-number">{value}</strong>
+      <span className="insight-arrow" aria-hidden="true">↗</span>
+    </button>
+  )}</div>;
 }
 
 function App({ user, ready }) {
@@ -102,6 +107,7 @@ function App({ user, ready }) {
   const workspace = !authPage && !supportPage && (Boolean(user) || demo);
   const [cloudReadings, setCloudReadings] = useState([]);
   const [cloudStatus, setCloudStatus] = useState('');
+  const [readingFeed, setReadingFeed] = useState('Connecting to Firebase…');
   const [sensorSync, setSensorSync] = useState('');
   const syncAttempts = useRef(new Set());
   const [state, setState] = useState(demo ? initial : newFarm);
@@ -183,7 +189,11 @@ function App({ user, ready }) {
 
   useEffect(() => {
     if (!user || demo || !workspace || role !== 'grower') return;
-    return watchReadings(auth, user.uid, setCloudReadings, () => {
+    return watchReadings(auth, user.uid, (readings, cacheOnly) => {
+      setCloudReadings(readings);
+      setReadingFeed(cacheOnly ? 'Showing saved readings while connecting to Firebase.' : 'Live readings connected to Firebase.');
+    }, () => {
+      setReadingFeed('Cloud readings unavailable. Showing saved readings on this device.');
       setCloudStatus('Cloud readings are unavailable. Saved readings remain on this device.');
     });
   }, [user, workspace, role]);
@@ -242,6 +252,7 @@ function App({ user, ready }) {
 
   const cloudIds = new Set(cloudReadings.map(item => item.id));
   const history = [...cloudReadings, ...state.history.filter(item => !item.id || !cloudIds.has(item.id))]
+    .map(item => item.sensorId ? item : { ...item, sensorId: firstId })
     .sort((first, second) => second.time - first.time);
 
   const sensorLocation = state.sensors.find(item => item.id === state.sensorId) ?? state.sensors[0];
@@ -271,6 +282,11 @@ function App({ user, ready }) {
       if (!item) return old;
       return { ...old, sensorId: id, scenario: item.scenario, demand: false };
     });
+  }
+
+  function openSensor(id) {
+    selectSensor(id);
+    setView('dashboard');
   }
 
   function saveSensor(item) {
@@ -388,15 +404,27 @@ function App({ user, ready }) {
         : view === 'insights' ? <>
           <h1>{t("Insights")}</h1>
           <p className="intro">Activity saved in this workspace.</p>
-          {!loaded ? <p role="status">Loading activity…</p> : <ActivityStats sensors={state.sensors} history={history} />}
+          {!loaded ? <p role="status">Loading activity…</p> : <ActivityStats sensors={state.sensors} history={history} onView={setView} />}
+        </> : view === 'readings' ? <>
+          <h1>{t('Saved readings')}</h1>
+          {!demo && <p className="intro" role="status">{readingFeed}</p>}
+          <ReadingList sensors={state.sensors} readings={history} timestamp={formatTime}
+            sourceLabels={sourceLabels} cropName={cropName} onOpen={openSensor} />
+        </> : view === 'sensors-with-readings' ? <>
+          <h1>{t('Sensors with readings')}</h1>
+          {!demo && <p className="intro" role="status">{readingFeed}</p>}
+          <SensorList sensors={state.sensors} readings={history} timestamp={formatTime}
+            sourceLabels={sourceLabels} onOpen={openSensor} withReadings />
         </> : view === 'sensors' ? <>
           <h1>{t("Sensors")}</h1>
           <p className="intro">Register devices, update field locations and print QR labels.</p>
           {!demo && sensorSync && <p className="monitor-note" role="status">{sensorSync}</p>}
           {!loaded ? <p role="status">Loading sensors…</p> :
             <SensorRegister key={sensorLocation?.id ?? 'empty'} sensors={state.sensors} sensor={sensorLocation}
-              missing={missingSensor} disabled={busy} lastSeen={sensorHistory[0] ? formatTime(sensorHistory[0].time) : ''}
+              missing={missingSensor} disabled={busy} latest={sensorHistory[0]} lastSeen={sensorHistory[0] ? formatTime(sensorHistory[0].time) : ''}
               onSelect={selectSensor} onSave={saveSensor} />}
+          {loaded && <SensorList sensors={state.sensors} readings={history} timestamp={formatTime}
+            sourceLabels={sourceLabels} onOpen={openSensor} />}
         </> : view === 'dashboard' && !demo && !role ? <p role="status">Loading your workspace…</p>
         : view === 'dashboard' && specialist ? <Publications uid={user.uid} />
         : view === 'dashboard' ? <>
@@ -408,7 +436,7 @@ function App({ user, ready }) {
               : 'See field conditions and recent activity from your farm.'}</p>
           </div>
         </section>
-        {loaded && <ActivityStats sensors={state.sensors} history={history} />}
+        {loaded && <ActivityStats sensors={state.sensors} history={history} onView={setView} />}
         {!loaded ? <p role="status">Loading your dashboard…</p> : !sensorLocation ? <section className="card">
           <h2>{t("No field sensors yet")}</h2>
           <p className="monitor-note">Register a sensor to start collecting readings for your farm.</p>
@@ -456,7 +484,7 @@ function App({ user, ready }) {
               <button disabled={!loaded || busy} onClick={readSensor}>Read endpoint</button>
             </details>}
             {!demo && <>
-              <p className="monitor-note">Cloud readings from Firebase appear here automatically.</p>
+              <p className="monitor-note">{readingFeed}</p>
               {!localEndpoint && <p className="monitor-note">A physical sensor needs a connected gateway to send its readings online.</p>}
               <details>
                 <summary>Test Firebase sync</summary>
